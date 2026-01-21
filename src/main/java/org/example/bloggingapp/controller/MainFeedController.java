@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.Priority;
 
 import org.example.bloggingapp.Models.PostEntity;
 import org.example.bloggingapp.Models.CommentEntity;
@@ -13,6 +14,8 @@ import org.example.bloggingapp.Models.ReviewEntity;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * 🧩 Main Feed Controller - Modern Social Media Style Blogging Interface
@@ -45,6 +48,8 @@ public class MainFeedController {
     @FXML private VBox commentSection;
     @FXML private TextArea commentField;
     @FXML private Button submitCommentButton;
+    @FXML private ScrollPane commentsScrollPane;
+    @FXML private VBox commentsContainer;
     
     // Review Components
     @FXML private VBox reviewSection;
@@ -59,6 +64,14 @@ public class MainFeedController {
     private PostEntity currentPostForComment;
     private PostEntity currentPostForReview;
     private int selectedRating = 0;
+    // Comment data
+    private Map<Integer, List<CommentEntity>> postComments = new HashMap<>();
+    private Map<Integer, Boolean> commentsVisible = new HashMap<>();
+    private Map<Integer, Boolean> reviewsVisible = new HashMap<>();
+    private Map<Integer, VBox> commentUIComponents = new HashMap<>();
+    
+    // Comment Controller for modal comment scene
+    private CommentController commentController;
     
     // ==================== SERVICE LAYER ===================
     // These would be injected via dependency injection in a real app
@@ -76,6 +89,9 @@ public class MainFeedController {
         // Initialize data structures
         allPosts = new ArrayList<>();
         filteredPosts = new ArrayList<>();
+        
+        // Initialize comment controller
+        commentController = new CommentController();
         
         // Setup event handlers
         setupEventHandlers();
@@ -290,11 +306,16 @@ public class MainFeedController {
                 1 // Current user ID
             );
             
-            // In real implementation: commentService.addComment(newComment);
-            System.out.println("💬 Created comment: " + newComment.getContent());
+            // Add comment to storage
+            List<CommentEntity> comments = postComments.computeIfAbsent(currentPostForComment.getPostId(), k -> new ArrayList<>());
+            comments.add(0, newComment); // Add to beginning
             
+            // Add comment to display
+            VBox commentCard = createCommentCard(newComment);
+            commentsContainer.getChildren().add(0, commentCard);
+            
+            // Clear form
             commentField.clear();
-            hideCommentSection();
             
             showAlert("Success", "Comment added successfully!");
             System.out.println("💬 Added comment to post " + currentPostForComment.getPostId());
@@ -404,35 +425,86 @@ public class MainFeedController {
         Button commentBtn = new Button("💬 " + getCommentCount(post));
         commentBtn.setStyle("-fx-background-color: transparent; -fx-border-color: #1d9bf0; " +
                         "-fx-border-radius: 20; -fx-text-fill: #1d9bf0; -fx-cursor: hand;");
-        commentBtn.setOnAction(e -> showCommentSection(post));
+        commentBtn.setOnAction(e -> {
+            System.out.println("🔍 Comment button clicked for post: " + post.getPostId());
+            toggleInlineComments(post, card);
+        });
         
         Button reviewBtn = new Button("⭐ Review");
         reviewBtn.setStyle("-fx-background-color: transparent; -fx-border-color: #ffd700; " +
                        "-fx-border-radius: 20; -fx-text-fill: #ffd700; -fx-cursor: hand;");
-        reviewBtn.setOnAction(e -> showReviewSection(post));
+        reviewBtn.setOnAction(e -> toggleReviewSection(post));
         
-        Button loadCommentsBtn = new Button("📂 Load Comments");
-        loadCommentsBtn.setStyle("-fx-background-color: #f0f0f0; -fx-border-radius: 20; " +
-                            "-fx-text-fill: #333333; -fx-cursor: hand;");
-        loadCommentsBtn.setOnAction(e -> loadCommentsForPost(post));
+        actionsBox.getChildren().addAll(commentBtn, reviewBtn);
         
-        actionsBox.getChildren().addAll(commentBtn, reviewBtn, loadCommentsBtn);
+        // Inline comments section (initially hidden)
+        VBox inlineCommentsSection = createInlineCommentsSection(post);
+        inlineCommentsSection.setVisible(false);
+        inlineCommentsSection.setManaged(false);
         
-        card.getChildren().addAll(authorLabel, timeLabel, contentLabel, actionsBox);
+        // Store reference to comments section for toggling
+        commentUIComponents.put(post.getPostId(), inlineCommentsSection);
+        
+        card.getChildren().addAll(authorLabel, timeLabel, contentLabel, actionsBox, inlineCommentsSection);
         return card;
     }
     
     private void showCommentSection(PostEntity post) {
+        System.out.println("🔍 Showing comment section for post: " + post.getPostId());
         currentPostForComment = post;
         commentSection.setVisible(true);
         commentSection.setManaged(true);
         commentField.requestFocus();
+        
+        // Load comments for this post automatically
+        loadCommentsForPost(post);
+        
+        System.out.println("✅ Comment section should now be visible");
     }
     
     private void hideCommentSection() {
         commentSection.setVisible(false);
         commentSection.setManaged(false);
         currentPostForComment = null;
+    }
+    
+    private void toggleCommentSection(PostEntity post) {
+        System.out.println("🔄 Toggling comment section for post: " + post.getPostId());
+        
+        // Use the new modal comment scene instead of inline comments
+        if (commentController != null) {
+            commentController.toggleCommentScene(post);
+        } else {
+            System.err.println("❌ CommentController not initialized");
+        }
+    }
+    
+    private void toggleReviewSection(PostEntity post) {
+        System.out.println("🔄 Toggling review section for post: " + post.getPostId());
+        System.out.println("🔍 Current visible: " + reviewSection.isVisible());
+        System.out.println("🔍 Current post: " + (currentPostForReview != null ? currentPostForReview.getPostId() : "null"));
+        
+        // Hide comment section if showing reviews
+        if (commentSection.isVisible()) {
+            commentSection.setVisible(false);
+            commentSection.setManaged(false);
+            System.out.println("🔽 Hid comment section");
+        }
+        
+        if (reviewSection.isVisible() && currentPostForReview != null && currentPostForReview.getPostId() == post.getPostId()) {
+            // Hide if same post
+            reviewSection.setVisible(false);
+            reviewSection.setManaged(false);
+            currentPostForReview = null;
+            System.out.println("🔽 Hiding review section for same post: " + post.getPostId());
+        } else {
+            // Show review for this post
+            currentPostForReview = post;
+            reviewSection.setVisible(true);
+            reviewSection.setManaged(true);
+            reviewCommentField.requestFocus();
+            System.out.println("🔼 Showing review section for post: " + post.getPostId());
+        }
     }
     
     private void showReviewSection(PostEntity post) {
@@ -449,9 +521,72 @@ public class MainFeedController {
     }
     
     private void loadCommentsForPost(PostEntity post) {
-        // In real implementation: List<CommentEntity> comments = commentService.getCommentsByPostId(post.getPostId());
-        showAlert("Info", "Loaded " + getCommentCount(post) + " comments for post " + post.getPostId());
-        System.out.println("📂 Loading comments for post: " + post.getPostId());
+        System.out.println("📂 Starting to load comments for post: " + post.getPostId());
+        
+        // Get or create comments for this post
+        List<CommentEntity> comments = postComments.computeIfAbsent(post.getPostId(), k -> createSampleComments(post.getPostId()));
+        System.out.println("📝 Found " + comments.size() + " comments");
+        
+        // Clear existing comments display
+        commentsContainer.getChildren().clear();
+        System.out.println("🧹 Cleared existing comments display");
+        
+        // Display each comment
+        for (int i = 0; i < comments.size(); i++) {
+            CommentEntity comment = comments.get(i);
+            System.out.println("📄 Creating comment card " + (i+1) + ": " + comment.getContent());
+            VBox commentCard = createCommentCard(comment);
+            commentsContainer.getChildren().add(commentCard);
+        }
+        
+        System.out.println("✅ Added " + commentsContainer.getChildren().size() + " comment cards to container");
+        
+        showAlert("Info", "Loaded " + comments.size() + " comments for post " + post.getPostId());
+        System.out.println("📂 Finished loading comments for post: " + post.getPostId());
+    }
+    
+    private List<CommentEntity> createSampleComments(int postId) {
+        List<CommentEntity> comments = new ArrayList<>();
+        
+        // Sample comments
+        comments.add(new CommentEntity(1, "Great post! Really helpful content.", 
+            LocalDateTime.now().minusHours(2), postId, 2));
+        comments.add(new CommentEntity(2, "Thanks for sharing this! 🙏", 
+            LocalDateTime.now().minusHours(1), postId, 3));
+        comments.add(new CommentEntity(3, "Looking forward to more content like this.", 
+            LocalDateTime.now().minusMinutes(30), postId, 1));
+        
+        return comments;
+    }
+    
+    private VBox createCommentCard(CommentEntity comment) {
+        System.out.println("🎨 Creating comment card for: " + comment.getContent());
+        
+        VBox card = new VBox(8);
+        card.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 8px; -fx-padding: 12px; " +
+                   "-fx-border-color: #e0e0e0; -fx-border-radius: 8px; -fx-border-width: 1px;");
+        
+        // Comment header
+        HBox header = new HBox(8);
+        header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        
+        Label authorLabel = new Label("User " + comment.getUserId());
+        authorLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #1d9bf0;");
+        
+        Label timeLabel = new Label(formatTimeAgo(comment.getCreatedAt()));
+        timeLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #666666;");
+        
+        header.getChildren().addAll(authorLabel, timeLabel);
+        
+        // Comment content
+        Label contentLabel = new Label(comment.getContent());
+        contentLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #333333; -fx-wrap-text: true;");
+        contentLabel.setPrefWidth(350);
+        
+        card.getChildren().addAll(header, contentLabel);
+        
+        System.out.println("✅ Comment card created with " + card.getChildren().size() + " children");
+        return card;
     }
     
     // ==================== UTILITY METHODS ===================
@@ -510,11 +645,160 @@ public class MainFeedController {
         return allPosts.size() + 1;
     }
     
-    private int generateCommentId() {
+    private int generateReviewId() {
         return (int) (Math.random() * 10000);
     }
     
-    private int generateReviewId() {
+    // ==================== INLINE COMMENTS ===================
+    
+    /**
+     * Creates an inline comments section for a post
+     */
+    private VBox createInlineCommentsSection(PostEntity post) {
+        VBox commentsSection = new VBox(10);
+        commentsSection.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 8; -fx-padding: 15;");
+        
+        // Comments header
+        HBox headerBox = new HBox(10);
+        headerBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        
+        Label commentsLabel = new Label("Comments");
+        commentsLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #495057;");
+        
+        headerBox.getChildren().add(commentsLabel);
+        
+        // Comments container
+        VBox commentsContainer = new VBox(8);
+        commentsContainer.setPrefWidth(400);
+        
+        // Load existing comments
+        List<CommentEntity> comments = postComments.getOrDefault(post.getPostId(), new ArrayList<>());
+        for (CommentEntity comment : comments) {
+            commentsContainer.getChildren().add(createCommentItem(comment));
+        }
+        
+        if (comments.isEmpty()) {
+            Label noCommentsLabel = new Label("No comments yet. Be the first to comment!");
+            noCommentsLabel.setStyle("-fx-text-fill: #6c757d; -fx-font-style: italic;");
+            commentsContainer.getChildren().add(noCommentsLabel);
+        }
+        
+        // Add comment section
+        HBox addCommentBox = new HBox(10);
+        addCommentBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        
+        TextArea commentField = new TextArea();
+        commentField.setPromptText("Write a comment...");
+        commentField.setPrefHeight(60);
+        commentField.setPrefWidth(300);
+        commentField.setWrapText(true);
+        commentField.setStyle("-fx-background-color: white; -fx-border-color: #dee2e6; -fx-border-radius: 6;");
+        
+        Button submitButton = new Button("Comment");
+        submitButton.setStyle("-fx-background-color: #1d9bf0; -fx-text-fill: white; -fx-background-radius: 6; -fx-cursor: hand;");
+        submitButton.setOnAction(e -> addInlineComment(post, commentField, commentsContainer));
+        
+        addCommentBox.getChildren().addAll(commentField, submitButton);
+        
+        commentsSection.getChildren().addAll(headerBox, commentsContainer, addCommentBox);
+        
+        return commentsSection;
+    }
+    
+    /**
+     * Creates a comment item UI component
+     */
+    private HBox createCommentItem(CommentEntity comment) {
+        HBox commentBox = new HBox(10);
+        commentBox.setStyle("-fx-background-color: white; -fx-background-radius: 6; -fx-padding: 10;");
+        
+        // Avatar
+        javafx.scene.shape.Circle avatar = new javafx.scene.shape.Circle(12);
+        avatar.setStyle("-fx-fill: #007bff;");
+        
+        // Comment content
+        VBox commentContent = new VBox(4);
+        commentContent.setPrefWidth(350);
+        
+        // Author and time
+        HBox headerBox = new HBox(8);
+        headerBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        
+        Label authorLabel = new Label("User " + comment.getUserId());
+        authorLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #495057;");
+        
+        Label timeLabel = new Label(formatTimeAgo(comment.getCreatedAt()));
+        timeLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #6c757d;");
+        
+        headerBox.getChildren().addAll(authorLabel, timeLabel);
+        
+        // Comment text
+        Label commentLabel = new Label(comment.getContent());
+        commentLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #212529; -fx-wrap-text: true;");
+        
+        commentContent.getChildren().addAll(headerBox, commentLabel);
+        commentBox.getChildren().addAll(avatar, commentContent);
+        
+        return commentBox;
+    }
+    
+    /**
+     * Toggles inline comments visibility for a post
+     */
+    private void toggleInlineComments(PostEntity post, VBox card) {
+        VBox commentsSection = commentUIComponents.get(post.getPostId());
+        if (commentsSection != null) {
+            boolean isVisible = commentsSection.isVisible();
+            commentsSection.setVisible(!isVisible);
+            commentsSection.setManaged(!isVisible);
+            
+            System.out.println("🔄 " + (isVisible ? "Hiding" : "Showing") + " inline comments for post: " + post.getPostId());
+        }
+    }
+    
+    /**
+     * Adds an inline comment to a post
+     */
+    private void addInlineComment(PostEntity post, TextArea commentField, VBox commentsContainer) {
+        String content = commentField.getText().trim();
+        
+        if (content.isEmpty()) {
+            showAlert("Empty Comment", "Please write a comment before submitting.");
+            return;
+        }
+        
+        // Create new comment
+        CommentEntity comment = new CommentEntity();
+        comment.setCommentId(generateCommentId());
+        comment.setPostId(post.getPostId());
+        comment.setUserId(1); // This would come from user session
+        comment.setContent(content);
+        comment.setCreatedAt(java.time.LocalDateTime.now());
+        
+        // Add to data structure
+        List<CommentEntity> comments = postComments.computeIfAbsent(post.getPostId(), k -> new ArrayList<>());
+        comments.add(comment);
+        
+        // Remove "no comments" label if present
+        if (!commentsContainer.getChildren().isEmpty() && 
+            commentsContainer.getChildren().get(0) instanceof Label && 
+            ((Label) commentsContainer.getChildren().get(0)).getText().contains("No comments yet")) {
+            commentsContainer.getChildren().clear();
+        }
+        
+        // Add to UI
+        commentsContainer.getChildren().add(createCommentItem(comment));
+        
+        // Clear comment field
+        commentField.clear();
+        
+        System.out.println("✅ Inline comment added for post: " + post.getPostId());
+    }
+    
+    /**
+     * Generates a unique comment ID
+     */
+    private int generateCommentId() {
         return (int) (Math.random() * 10000);
     }
     

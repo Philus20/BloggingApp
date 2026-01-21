@@ -19,7 +19,7 @@
                 <children>
                     <TextField fx:id="searchField" promptText="Search posts, tags..." 
                                styleClass="search-field" prefWidth="300"/>
-                    <Button fx:id="refreshButton" text="🔄" styleClass="icon-button"/>
+                    <Button fx:id="refreshButton" text="🔄" styleClass="icon-button" onAction="#refreshPosts"/>
                 </children>
             </HBox>
             
@@ -46,7 +46,7 @@
                         <HBox spacing="10" alignment="CENTER_LEFT">
                             <children>
                                 <Label fx:id="charCountLabel" text="0/280" styleClass="char-counter"/>
-                                <Button fx:id="postButton" text="Post" styleClass="post-button"/>
+                                <Button fx:id="postButton" text="Post" styleClass="post-button" onAction="#createPost"/>
                             </children>
                         </HBox>
                     </children>
@@ -55,60 +55,84 @@
         </HBox>
     </VBox>
     
-    <!-- 3️⃣ Feed Area -->
-    <ScrollPane fx:id="feedScrollPane" styleClass="feed-scroll" fitToWidth="true" VBox.vgrow="ALWAYS">
-        <content>
-            <VBox fx:id="feedContainer" styleClass="feed-container" spacing="20">
+    <!-- 3️⃣ Main Content Area with Overlay -->
+    <StackPane VBox.vgrow="ALWAYS">
+        <children>
+            <!-- Feed Area -->
+            <ScrollPane fx:id="feedScrollPane" styleClass="feed-scroll" fitToWidth="true">
+                <content>
+                    <VBox fx:id="feedContainer" styleClass="feed-container" spacing="20">
+                        <padding>
+                            <Insets top="10" right="20" bottom="20" left="20"/>
+                        </padding>
+                    </VBox>
+                </content>
+            </ScrollPane>
+            
+            <!-- Comment Section (Toggleable) -->
+            <VBox fx:id="commentSection" styleClass="comment-section" visible="false" managed="false" 
+                  alignment="BOTTOM_CENTER" StackPane.alignment="BOTTOM_CENTER"
+                  style="-fx-background-color: rgba(255, 255, 255, 0.95); -fx-background-radius: 12px;">
                 <padding>
-                    <Insets top="10" right="20" bottom="20" left="20"/>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
                 </padding>
-            </VBox>
-        </content>
-    </ScrollPane>
-    
-    <!-- 4️⃣ Comment Section (Initially Hidden) -->
-    <VBox fx:id="commentSection" styleClass="comment-section" visible="false" managed="false" spacing="15">
-        <padding>
-            <Insets top="20" right="20" bottom="20" left="20"/>
-        </padding>
-        
-        <HBox spacing="15" alignment="CENTER_LEFT">
-            <children>
-                <Circle radius="20" styleClass="post-avatar"/>
-                <VBox HBox.hgrow="ALWAYS">
+                
+                <VBox spacing="15" styleClass="comment-overlay">
                     <children>
-                        <TextArea fx:id="commentField" promptText="Write a comment..." 
-                                   styleClass="comment-textarea" prefHeight="60" wrapText="true"/>
-                        <Button fx:id="submitCommentButton" text="Comment" styleClass="comment-button"/>
+                        <Label text="Comments" styleClass="review-title"/>
+                        <ScrollPane fx:id="commentsScrollPane" styleClass="feed-scroll" fitToWidth="true" prefHeight="200">
+                            <content>
+                                <VBox fx:id="commentsContainer" styleClass="feed-container" spacing="10">
+                                    <padding>
+                                        <Insets top="10" right="10" bottom="10" left="10"/>
+                                    </padding>
+                                </VBox>
+                            </content>
+                        </ScrollPane>
+                        
+                        <HBox spacing="15" alignment="CENTER_LEFT">
+                            <children>
+                                <Circle radius="20" styleClass="post-avatar"/>
+                                <VBox HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <TextArea fx:id="commentField" promptText="Write a comment..." 
+                                                   styleClass="comment-textarea" prefHeight="60" wrapText="true"/>
+                                        <Button fx:id="submitCommentButton" text="Comment" styleClass="comment-button" onAction="#addComment"/>
+                                    </children>
+                                </VBox>
+                            </children>
+                        </HBox>
                     </children>
                 </VBox>
-            </children>
-        </HBox>
-    </VBox>
-    
-    <!-- 5️⃣ Review Section (Initially Hidden) -->
-    <VBox fx:id="reviewSection" styleClass="review-section" visible="false" managed="false" spacing="15">
-        <padding>
-            <Insets top="20" right="20" bottom="20" left="20"/>
-        </padding>
-        
-        <VBox spacing="15">
-            <children>
-                <Label text="Rate this post" styleClass="review-title"/>
-                <HBox spacing="10" alignment="CENTER">
+            </VBox>
+            
+            <!-- Review Section Overlay -->
+            <VBox fx:id="reviewSection" styleClass="review-section" visible="false" managed="false" 
+                  alignment="BOTTOM_CENTER" StackPane.alignment="BOTTOM_CENTER"
+                  style="-fx-background-color: #f0f0f0; -fx-background-radius: 12px;">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
+                </padding>
+                
+                <VBox spacing="15" styleClass="review-overlay">
                     <children>
-                        <Label fx:id="star1" text="⭐" styleClass="star-rating"/>
-                        <Label fx:id="star2" text="⭐" styleClass="star-rating"/>
-                        <Label fx:id="star3" text="⭐" styleClass="star-rating"/>
-                        <Label fx:id="star4" text="⭐" styleClass="star-rating"/>
-                        <Label fx:id="star5" text="⭐" styleClass="star-rating"/>
+                        <Label text="Rate this post" styleClass="review-title"/>
+                        <HBox spacing="10" alignment="CENTER">
+                            <children>
+                                <Label fx:id="star1" text="⭐" styleClass="star-rating"/>
+                                <Label fx:id="star2" text="⭐" styleClass="star-rating"/>
+                                <Label fx:id="star3" text="⭐" styleClass="star-rating"/>
+                                <Label fx:id="star4" text="⭐" styleClass="star-rating"/>
+                                <Label fx:id="star5" text="⭐" styleClass="star-rating"/>
+                            </children>
+                        </HBox>
+                        <TextArea fx:id="reviewCommentField" promptText="Share your thoughts..." 
+                                   styleClass="review-textarea" prefHeight="60" wrapText="true"/>
+                        <Button fx:id="submitReviewButton" text="Submit Review" styleClass="review-button" onAction="#submitReview"/>
                     </children>
-                </HBox>
-                <TextArea fx:id="reviewCommentField" promptText="Share your thoughts..." 
-                           styleClass="review-textarea" prefHeight="60" wrapText="true"/>
-                <Button fx:id="submitReviewButton" text="Submit Review" styleClass="review-button"/>
-            </children>
-        </VBox>
-    </VBox>
+                </VBox>
+            </VBox>
+        </children>
+    </StackPane>
     
 </VBox>

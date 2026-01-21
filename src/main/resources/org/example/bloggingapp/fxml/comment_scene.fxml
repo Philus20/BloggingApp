@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Font?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="org.example.bloggingapp.controller.CommentController"
+      styleClass="comment-scene" spacing="0" 
+      style="-fx-background-color: rgba(255, 255, 255, 0.98); -fx-background-radius: 15px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 5);">
+    
+    <!-- Header -->
+    <HBox styleClass="comment-header" alignment="CENTER_LEFT" spacing="15">
+        <children>
+            <Label fx:id="commentTitle" text="Comments" styleClass="comment-title" HBox.hgrow="ALWAYS"/>
+            <Button fx:id="closeButton" text="✕" styleClass="close-button" onAction="#closeCommentScene"/>
+        </children>
+        <padding>
+            <Insets top="15" right="20" bottom="15" left="20"/>
+        </padding>
+    </HBox>
+    
+    <!-- Post Context -->
+    <VBox fx:id="postContext" styleClass="post-context" spacing="10">
+        <padding>
+            <Insets top="15" right="20" bottom="15" left="20"/>
+        </padding>
+        <children>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <children>
+                    <Circle fx:id="postAuthorAvatar" radius="15" styleClass="post-avatar"/>
+                    <VBox HBox.hgrow="ALWAYS">
+                        <children>
+                            <Label fx:id="postAuthorLabel" text="Author Name" styleClass="post-author"/>
+                            <Label fx:id="postTimeLabel" text="2 hours ago" styleClass="post-time"/>
+                        </children>
+                    </VBox>
+                </children>
+            </HBox>
+            <Label fx:id="postContentLabel" text="Post content will appear here..." 
+                   styleClass="post-content-preview" wrapText="true"/>
+        </children>
+        <style>
+            <style>
+                -fx-background-color: #f8f9fa;
+                -fx-border-color: #e9ecef;
+                -fx-border-width: 0 0 1 0;
+            </style>
+        </style>
+    </VBox>
+    
+    <!-- Comments Area -->
+    <ScrollPane fx:id="commentsScrollPane" styleClass="comments-scroll" fitToWidth="true" VBox.vgrow="ALWAYS">
+        <content>
+            <VBox fx:id="commentsContainer" styleClass="comments-container" spacing="12">
+                <padding>
+                    <Insets top="15" right="20" bottom="15" left="20"/>
+                </padding>
+            </VBox>
+        </content>
+    </ScrollPane>
+    
+    <!-- Add Comment Section -->
+    <VBox styleClass="add-comment-section" spacing="12">
+        <padding>
+            <Insets top="20" right="20" bottom="20" left="20"/>
+        </padding>
+        <style>
+            <style>
+                -fx-background-color: #ffffff;
+                -fx-border-color: #e9ecef;
+                -fx-border-width: 1 0 0 0;
+            </style>
+        </style>
+        
+        <children>
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <children>
+                    <Circle fx:id="currentUserAvatar" radius="18" styleClass="current-user-avatar"/>
+                    <VBox HBox.hgrow="ALWAYS">
+                        <children>
+                            <TextArea fx:id="commentField" promptText="Write a comment..." 
+                                       styleClass="comment-textarea" prefHeight="60" wrapText="true"/>
+                            <HBox spacing="10" alignment="CENTER_LEFT" styleClass="comment-actions">
+                                <children>
+                                    <Label fx:id="charCountLabel" text="0/500" styleClass="char-counter"/>
+                                    <Region HBox.hgrow="ALWAYS"/>
+                                    <Button fx:id="submitButton" text="Comment" styleClass="submit-comment-button" onAction="#submitComment"/>
+                                </children>
+                            </HBox>
+                        </children>
+                    </VBox>
+                </children>
+            </HBox>
+        </children>
+    </VBox>
+    
+</VBox>
