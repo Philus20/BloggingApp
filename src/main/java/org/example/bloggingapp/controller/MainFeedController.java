@@ -5,11 +5,16 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.layout.Priority;
 
 import org.example.bloggingapp.Models.PostEntity;
 import org.example.bloggingapp.Models.CommentEntity;
 import org.example.bloggingapp.Models.ReviewEntity;
+import org.example.bloggingapp.Models.UserEntity;
+import org.example.bloggingapp.Database.factories.ServiceFactory;
+import org.example.bloggingapp.Database.Services.PostService;
+import org.example.bloggingapp.Database.Services.CommentService;
+import org.example.bloggingapp.Database.Services.UserService;
+import org.example.bloggingapp.Database.Services.ReviewService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -57,6 +62,14 @@ public class MainFeedController {
     @FXML private TextArea reviewCommentField;
     @FXML private Button submitReviewButton;
     
+    // ==================== SERVICE LAYER ===================
+    
+    private ServiceFactory serviceFactory;
+    private PostService postService;
+    private CommentService commentService;
+    private UserService userService;
+    private ReviewService reviewService;
+    
     // ==================== DATA LAYER ===================
     
     private List<PostEntity> allPosts;
@@ -64,21 +77,31 @@ public class MainFeedController {
     private PostEntity currentPostForComment;
     private PostEntity currentPostForReview;
     private int selectedRating = 0;
+    private int currentUserId = 1; // This would come from user session
+    
     // Comment data
     private Map<Integer, List<CommentEntity>> postComments = new HashMap<>();
-    private Map<Integer, Boolean> commentsVisible = new HashMap<>();
-    private Map<Integer, Boolean> reviewsVisible = new HashMap<>();
     private Map<Integer, VBox> commentUIComponents = new HashMap<>();
     
-    // Comment Controller for modal comment scene
-    private CommentController commentController;
+    // ==================== USER SESSION MANAGEMENT ===================
     
-    // ==================== SERVICE LAYER ===================
-    // These would be injected via dependency injection in a real app
-    // private PostService postService;
-    // private CommentService commentService;
-    // private TagService tagService;
-    // private ReviewService reviewService;
+    /**
+     * Sets the current user ID from login session
+     */
+    public void setCurrentUserId(int userId) {
+        this.currentUserId = userId;
+        System.out.println("👤 Set current user ID: " + userId);
+        
+        // Reload posts to ensure user-specific data
+        loadPosts();
+    }
+    
+    /**
+     * Gets the current user ID
+     */
+    public int getCurrentUserId() {
+        return currentUserId;
+    }
     
     // ==================== INITIALIZATION ===================
     
@@ -86,20 +109,29 @@ public class MainFeedController {
     public void initialize() {
         System.out.println("🚀 Initializing MainFeedController");
         
-        // Initialize data structures
-        allPosts = new ArrayList<>();
-        filteredPosts = new ArrayList<>();
-        
-        // Initialize comment controller
-        commentController = new CommentController();
-        
-        // Setup event handlers
-        setupEventHandlers();
-        
-        // Load initial posts
-        loadPosts();
-        
-        System.out.println("✅ MainFeedController initialized successfully");
+        try {
+            // Initialize services using ServiceFactory
+            this.serviceFactory = ServiceFactory.getInstance();
+            this.postService = serviceFactory.getPostService();
+            this.commentService = serviceFactory.getCommentService();
+            this.userService = serviceFactory.getUserService();
+            this.reviewService = serviceFactory.getReviewService();
+            
+            // Initialize data structures
+            allPosts = new ArrayList<>();
+            filteredPosts = new ArrayList<>();
+            
+            // Setup event handlers
+            setupEventHandlers();
+            
+            // Load initial posts from database
+            loadPosts();
+            
+            System.out.println("✅ MainFeedController initialized successfully");
+        } catch (Exception e) {
+            System.err.println("❌ Failed to initialize MainFeedController: " + e.getMessage());
+            showAlert("Initialization Error", "Failed to load application data. Please restart the application.");
+        }
     }
     
     private void setupEventHandlers() {
@@ -169,17 +201,30 @@ public class MainFeedController {
      */
     private void loadPosts() {
         try {
-            // In real implementation: allPosts = postService.getAllPosts();
-            // For demo: Create sample posts
-            createSamplePosts();
+            // Load posts from database using service layer
+            allPosts = postService.findAll();
+            
+            // Update author names using user service
+            for (PostEntity post : allPosts) {
+                if (post.getUserId() > 0) {
+                    UserEntity user = userService.findById(post.getUserId());
+                    if (user != null) {
+                        post.setAuthorName(user.getUserName());
+                    } else {
+                        post.setAuthorName("Unknown User");
+                    }
+                } else {
+                    post.setAuthorName("Anonymous");
+                }
+            }
             
             filteredPosts = new ArrayList<>(allPosts);
             refreshFeed();
             
-            System.out.println("📋 Loaded " + allPosts.size() + " posts");
+            System.out.println("📋 Loaded " + allPosts.size() + " posts from database");
         } catch (Exception e) {
             System.err.println("❌ Error loading posts: " + e.getMessage());
-            showAlert("Error", "Failed to load posts. Please try again.");
+            showAlert("Database Error", "Failed to load posts from database. Please check your connection.");
         }
     }
     
@@ -201,24 +246,28 @@ public class MainFeedController {
         }
         
         try {
-            // Create new post
-            PostEntity newPost = new PostEntity(
-                generatePostId(),
-                extractTitleFromContent(content),
-                content,
-                LocalDateTime.now(),
-                1, // Current user ID (would come from session)
-                "Published",
-                0,
-                "Current User"
-            );
+            // Create new post entity
+            PostEntity newPost = new PostEntity();
+            newPost.setTitle(extractTitleFromContent(content));
+            newPost.setContent(content);
+            newPost.setCreatedAt(LocalDateTime.now());
+            newPost.setUserId(currentUserId);
+            newPost.setStatus("Published");
+            newPost.setViews(0);
             
-            // In real implementation: postService.createPost(newPost);
-            allPosts.add(0, newPost); // Add to beginning of list
+            // Get current user info for author name
+            UserEntity currentUser = userService.findById(currentUserId);
+            if (currentUser != null) {
+                newPost.setAuthorName(currentUser.getUserName());
+            } else {
+                newPost.setAuthorName("Current User");
+            }
             
-            // Extract and save hashtags
-            List<String> hashtags = extractAndSaveTags(content);
-            System.out.println("🏷️ Extracted hashtags: " + hashtags);
+            // Save post to database using service layer
+            PostEntity createdPost = postService.create(newPost);
+            
+            // Add to local list
+            allPosts.add(0, createdPost);
             
             // Clear form
             postContentField.clear();
@@ -229,7 +278,7 @@ public class MainFeedController {
             refreshFeed();
             
             showAlert("Success", "Post published successfully!");
-            System.out.println("✅ Created new post: " + newPost.getTitle());
+            System.out.println("✅ Created new post with ID: " + createdPost.getPostId());
             
         } catch (Exception e) {
             System.err.println("❌ Error creating post: " + e.getMessage());
@@ -471,12 +520,8 @@ public class MainFeedController {
     private void toggleCommentSection(PostEntity post) {
         System.out.println("🔄 Toggling comment section for post: " + post.getPostId());
         
-        // Use the new modal comment scene instead of inline comments
-        if (commentController != null) {
-            commentController.toggleCommentScene(post);
-        } else {
-            System.err.println("❌ CommentController not initialized");
-        }
+        // Use inline comments instead of modal
+        System.out.println("🔍 Using inline comment system for post: " + post.getPostId());
     }
     
     private void toggleReviewSection(PostEntity post) {
@@ -635,8 +680,13 @@ public class MainFeedController {
     }
     
     private int getCommentCount(PostEntity post) {
-        // In real implementation: return commentService.getCommentCountByPostId(post.getPostId());
-        return (int) (Math.random() * 20); // Mock data
+        try {
+            List<CommentEntity> comments = commentService.findByPostId(post.getPostId());
+            return comments.size();
+        } catch (Exception e) {
+            System.err.println("❌ Error getting comment count for post " + post.getPostId() + ": " + e.getMessage());
+            return 0;
+        }
     }
     
     // ==================== ID GENERATORS ===================
@@ -671,16 +721,27 @@ public class MainFeedController {
         VBox commentsContainer = new VBox(8);
         commentsContainer.setPrefWidth(400);
         
-        // Load existing comments
-        List<CommentEntity> comments = postComments.getOrDefault(post.getPostId(), new ArrayList<>());
-        for (CommentEntity comment : comments) {
-            commentsContainer.getChildren().add(createCommentItem(comment));
-        }
-        
-        if (comments.isEmpty()) {
-            Label noCommentsLabel = new Label("No comments yet. Be the first to comment!");
-            noCommentsLabel.setStyle("-fx-text-fill: #6c757d; -fx-font-style: italic;");
-            commentsContainer.getChildren().add(noCommentsLabel);
+        // Load existing comments from database
+        try {
+            List<CommentEntity> comments = commentService.findByPostId(post.getPostId());
+            
+            // Store in local cache
+            postComments.put(post.getPostId(), comments);
+            
+            for (CommentEntity comment : comments) {
+                commentsContainer.getChildren().add(createCommentItem(comment));
+            }
+            
+            if (comments.isEmpty()) {
+                Label noCommentsLabel = new Label("No comments yet. Be the first to comment!");
+                noCommentsLabel.setStyle("-fx-text-fill: #6c757d; -fx-font-style: italic;");
+                commentsContainer.getChildren().add(noCommentsLabel);
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Error loading comments for post " + post.getPostId() + ": " + e.getMessage());
+            Label errorLabel = new Label("Error loading comments");
+            errorLabel.setStyle("-fx-text-fill: #dc3545; -fx-font-style: italic;");
+            commentsContainer.getChildren().add(errorLabel);
         }
         
         // Add comment section
@@ -767,32 +828,40 @@ public class MainFeedController {
             return;
         }
         
-        // Create new comment
-        CommentEntity comment = new CommentEntity();
-        comment.setCommentId(generateCommentId());
-        comment.setPostId(post.getPostId());
-        comment.setUserId(1); // This would come from user session
-        comment.setContent(content);
-        comment.setCreatedAt(java.time.LocalDateTime.now());
-        
-        // Add to data structure
-        List<CommentEntity> comments = postComments.computeIfAbsent(post.getPostId(), k -> new ArrayList<>());
-        comments.add(comment);
-        
-        // Remove "no comments" label if present
-        if (!commentsContainer.getChildren().isEmpty() && 
-            commentsContainer.getChildren().get(0) instanceof Label && 
-            ((Label) commentsContainer.getChildren().get(0)).getText().contains("No comments yet")) {
-            commentsContainer.getChildren().clear();
+        try {
+            // Create new comment entity
+            CommentEntity comment = new CommentEntity();
+            comment.setPostId(post.getPostId());
+            comment.setUserId(currentUserId);
+            comment.setContent(content);
+            comment.setCreatedAt(LocalDateTime.now());
+            
+            // Save comment to database using service layer
+            CommentEntity createdComment = commentService.create(comment);
+            
+            // Add to local data structure
+            List<CommentEntity> comments = postComments.computeIfAbsent(post.getPostId(), k -> new ArrayList<>());
+            comments.add(createdComment);
+            
+            // Remove "no comments" label if present
+            if (!commentsContainer.getChildren().isEmpty() && 
+                commentsContainer.getChildren().get(0) instanceof Label && 
+                ((Label) commentsContainer.getChildren().get(0)).getText().contains("No comments yet")) {
+                commentsContainer.getChildren().clear();
+            }
+            
+            // Add to UI
+            commentsContainer.getChildren().add(createCommentItem(createdComment));
+            
+            // Clear comment field
+            commentField.clear();
+            
+            System.out.println("✅ Comment added to database with ID: " + createdComment.getCommentId());
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error adding comment: " + e.getMessage());
+            showAlert("Database Error", "Failed to add comment. Please try again.");
         }
-        
-        // Add to UI
-        commentsContainer.getChildren().add(createCommentItem(comment));
-        
-        // Clear comment field
-        commentField.clear();
-        
-        System.out.println("✅ Inline comment added for post: " + post.getPostId());
     }
     
     /**
