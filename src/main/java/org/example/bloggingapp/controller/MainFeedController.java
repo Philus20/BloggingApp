@@ -8,13 +8,14 @@ import javafx.scene.layout.VBox;
 
 import org.example.bloggingapp.Models.PostEntity;
 import org.example.bloggingapp.Models.CommentEntity;
-import org.example.bloggingapp.Models.ReviewEntity;
 import org.example.bloggingapp.Models.UserEntity;
+import org.example.bloggingapp.Models.ReviewEntity;
 import org.example.bloggingapp.Database.factories.ServiceFactory;
 import org.example.bloggingapp.Database.Services.PostService;
 import org.example.bloggingapp.Database.Services.CommentService;
 import org.example.bloggingapp.Database.Services.UserService;
 import org.example.bloggingapp.Database.Services.ReviewService;
+import org.example.bloggingapp.Database.Utils.RegexPatterns;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -240,8 +241,9 @@ public class MainFeedController {
             return;
         }
         
-        if (content.length() > 280) {
-            showAlert("Error", "Post is too long! Maximum 280 characters.");
+        // Content validation using RegexPatterns
+        if (!RegexPatterns.isLengthValid(content, 1, 280)) {
+            showAlert("Error", "Post content must be between 1 and 280 characters.");
             return;
         }
         

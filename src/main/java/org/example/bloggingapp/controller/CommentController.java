@@ -20,6 +20,7 @@ import org.example.bloggingapp.Models.UserEntity;
 import org.example.bloggingapp.Database.factories.ServiceFactory;
 import org.example.bloggingapp.Database.Services.CommentService;
 import org.example.bloggingapp.Database.Services.UserService;
+import org.example.bloggingapp.Database.Utils.RegexPatterns;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -103,7 +104,7 @@ public class CommentController {
     private void setupEventHandlers() {
         // Character counter for comment field
         commentField.textProperty().addListener((obs, oldVal, newVal) -> {
-            int length = newVal.length();
+            int length = newVal != null ? newVal.length() : 0;
             charCountLabel.setText(length + "/500");
             
             // Change color if approaching limit
@@ -295,13 +296,14 @@ public class CommentController {
     private void submitComment(ActionEvent event) {
         String content = commentField.getText().trim();
         
-        if (content.isEmpty()) {
+        // Content validation using RegexPatterns
+        if (RegexPatterns.isNullOrEmpty(content)) {
             showAlert(Alert.AlertType.WARNING, "Empty Comment", "Please write a comment before submitting.");
             return;
         }
         
-        if (content.length() > 500) {
-            showAlert(Alert.AlertType.WARNING, "Comment Too Long", "Comment must be 500 characters or less.");
+        if (!RegexPatterns.isLengthValid(content, 1, 500)) {
+            showAlert(Alert.AlertType.WARNING, "Comment Too Long", "Comment must be between 1 and 500 characters.");
             return;
         }
         

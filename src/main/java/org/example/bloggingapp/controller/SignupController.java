@@ -11,6 +11,7 @@ import javafx.stage.Stage;
 import org.example.bloggingapp.Models.UserEntity;
 import org.example.bloggingapp.Database.factories.ServiceFactory;
 import org.example.bloggingapp.Database.Services.UserService;
+import org.example.bloggingapp.Database.Utils.RegexPatterns;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -61,20 +62,20 @@ public class SignupController {
         }
         
         // Name validation
-        if (name.length() < 2) {
-            showAlert(Alert.AlertType.ERROR, "Invalid Name", "Name must be at least 2 characters");
+        if (!RegexPatterns.isLengthValid(name, 2, 50)) {
+            showAlert(Alert.AlertType.ERROR, "Invalid Name", "Name must be between 2 and 50 characters");
             return;
         }
         
         // Email validation
-        if (!isValidEmail(email)) {
+        if (!RegexPatterns.matches(email, RegexPatterns.EMAIL)) {
             showAlert(Alert.AlertType.ERROR, "Invalid Email", "Please enter a valid email address");
             return;
         }
         
         // Password validation
-        if (!isStrongPassword(password)) {
-            showAlert(Alert.AlertType.ERROR, "Weak Password", "Password must be at least 8 characters with uppercase, lowercase, and numbers");
+        if (!RegexPatterns.matches(password, RegexPatterns.STRONG_PASSWORD)) {
+            showAlert(Alert.AlertType.ERROR, "Weak Password", "Password must be at least 8 characters with uppercase, lowercase, numbers, and special characters");
             return;
         }
         
@@ -172,21 +173,17 @@ public class SignupController {
     }
     
     /**
-     * Validates email format
+     * Validates email format using RegexPatterns utility
      */
     private boolean isValidEmail(String email) {
-        return email != null && email.matches("^[A-Za-z0-9+_.-]+@(.+)$");
+        return RegexPatterns.matches(email, RegexPatterns.EMAIL);
     }
     
     /**
-     * Validates password strength
+     * Validates password strength using RegexPatterns utility
      */
     private boolean isStrongPassword(String password) {
-        return password != null && 
-               password.length() >= 8 &&
-               password.matches(".*[a-z].*") && // at least one lowercase
-               password.matches(".*[A-Z].*") && // at least one uppercase
-               password.matches(".*[0-9].*");    // at least one number
+        return RegexPatterns.matches(password, RegexPatterns.STRONG_PASSWORD);
     }
     
     /**

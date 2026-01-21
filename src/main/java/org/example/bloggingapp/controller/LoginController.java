@@ -11,6 +11,11 @@ import javafx.stage.Stage;
 import org.example.bloggingapp.Models.UserEntity;
 import org.example.bloggingapp.Database.factories.ServiceFactory;
 import org.example.bloggingapp.Database.Services.UserService;
+import org.example.bloggingapp.Database.Utils.RegexPatterns;
+import org.example.bloggingapp.Exceptions.AuthenticationException;
+import org.example.bloggingapp.Exceptions.DatabaseException;
+import org.example.bloggingapp.Exceptions.EntityNotFoundException;
+import org.example.bloggingapp.Exceptions.ValidationException;
 
 import java.io.IOException;
 
@@ -86,9 +91,15 @@ public class LoginController {
             System.out.println("✅ Login successful for: " + user.getUserName() + " (ID: " + user.getUserId() + ")");
             navigateToDashboard();
             
+        } catch (ValidationException e) {
+            System.err.println("❌ Validation error: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Validation Error", e.getMessage());
+        } catch (DatabaseException e) {
+            System.err.println("❌ Database error: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Database Error", "Login failed due to database issues. Please try again.");
         } catch (Exception e) {
             System.err.println("❌ Login error: " + e.getMessage());
-            showAlert(Alert.AlertType.ERROR, "Database Error", "Login failed. Please try again.");
+            showAlert(Alert.AlertType.ERROR, "Login Error", "Login failed. Please try again.");
         }
     }
 
@@ -143,10 +154,10 @@ public class LoginController {
     // ==================== UTILITY METHODS ===================
     
     /**
-     * Validates email format
+     * Validates email format using RegexPatterns utility
      */
     private boolean isValidEmail(String email) {
-        return email != null && email.matches("^[A-Za-z0-9+_.-]+@(.+)$");
+        return RegexPatterns.matches(email, RegexPatterns.EMAIL);
     }
     
     /**
