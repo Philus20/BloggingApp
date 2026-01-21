@@ -20,8 +20,14 @@ public class CommentService implements IService<CommentEntity> {
         if (comment.getCreatedAt() == null) {
             comment.setCreatedAt(LocalDateTime.now());
         }
-        commentRepository.create(comment);
-        return comment;
+        try {
+            commentRepository.create(comment);
+            return comment;
+        } catch (Exception e) {
+            System.err.println("❌ CommentService.create() failed: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to create comment: " + e.getMessage(), e);
+        }
     }
     
     @Override

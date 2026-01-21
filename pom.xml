@@ -93,7 +93,7 @@
         <artifactId>exec-maven-plugin</artifactId>
         <version>3.1.0</version>
         <configuration>
-          <mainClass>org.example.bloggingapp.Demo.UserRepositoryTest</mainClass>
+          <mainClass>org.example.bloggingapp.Demo.CommentCreationTest</mainClass>
         </configuration>
       </plugin>
       <plugin>

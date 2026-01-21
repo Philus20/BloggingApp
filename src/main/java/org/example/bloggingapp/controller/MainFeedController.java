@@ -831,6 +831,13 @@ public class MainFeedController {
         }
         
         try {
+            // Debug logging
+            System.out.println("🔍 Creating comment with:");
+            System.out.println("   Post ID: " + post.getPostId());
+            System.out.println("   User ID: " + currentUserId);
+            System.out.println("   Content: '" + content + "'");
+            System.out.println("   Created at: " + LocalDateTime.now());
+            
             // Create new comment entity
             CommentEntity comment = new CommentEntity();
             comment.setPostId(post.getPostId());
@@ -861,7 +868,9 @@ public class MainFeedController {
             System.out.println("✅ Comment added to database with ID: " + createdComment.getCommentId());
             
         } catch (Exception e) {
-            System.err.println("❌ Error adding comment: " + e.getMessage());
+            System.err.println("❌ Error adding comment: " + (e.getMessage() != null ? e.getMessage() : "null message"));
+            System.err.println("❌ Exception type: " + e.getClass().getSimpleName());
+            e.printStackTrace();
             showAlert("Database Error", "Failed to add comment. Please try again.");
         }
     }
