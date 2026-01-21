@@ -149,6 +149,10 @@ public class UserService implements IService<UserEntity> {
             }
             
             List<UserEntity> users = findAll();
+            System.out.println("Searching for email: " + email);
+            System.out.println(users);
+
+
             return users.stream()
                     .filter(user -> email.equalsIgnoreCase(user.getEmail()))
                     .findFirst()

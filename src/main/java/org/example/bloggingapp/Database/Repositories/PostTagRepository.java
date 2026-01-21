@@ -23,7 +23,7 @@ public class PostTagRepository implements Repository<PostTagEntity> {
 
     @Override
     public void create(PostTagEntity postTag) {
-        String sql = crudQueries.createQuery("PostTag", "postId, tagId");
+        String sql = crudQueries.createQuery("post_tags", "post_id, tag_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -39,7 +39,7 @@ public class PostTagRepository implements Repository<PostTagEntity> {
 
     @Override
     public PostTagEntity findByInteger(int id) {
-        String sql = crudQueries.getByIntegerQuery(id, "PostTag", "postId");
+        String sql = crudQueries.getByIntegerQuery(id, "post_tags", "post_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -76,7 +76,7 @@ public class PostTagRepository implements Repository<PostTagEntity> {
 
     @Override
     public List<PostTagEntity> findAll() {
-        String sql = crudQueries.getAllQuery("PostTag");
+        String sql = crudQueries.getAllQuery("post_tags");
         List<PostTagEntity> postTags = new ArrayList<>();
         
         try (Connection connection = connectionFactory.createConnection();
@@ -94,7 +94,7 @@ public class PostTagRepository implements Repository<PostTagEntity> {
 
     @Override
     public void updateById(int id) {
-        String sql = crudQueries.updateByIdQuery(id, "PostTag", "postId = ?, tagId = ?", "postId");
+        String sql = crudQueries.updateByIdQuery(id, "post_tags", "post_id = ?, tag_id = ?", "post_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -110,7 +110,7 @@ public class PostTagRepository implements Repository<PostTagEntity> {
 
     @Override
     public void delete(int id) {
-        String sql = crudQueries.deleteByIdQuery(id, "PostTag", "postId");
+        String sql = crudQueries.deleteByIdQuery(id, "post_tags", "post_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -123,8 +123,8 @@ public class PostTagRepository implements Repository<PostTagEntity> {
 
     private PostTagEntity mapResultSetToPostTag(ResultSet resultSet) throws SQLException {
         PostTagEntity postTag = new PostTagEntity();
-        postTag.setPostId(resultSet.getInt("postId"));
-        postTag.setTagId(resultSet.getInt("tagId"));
+        postTag.setPostId(resultSet.getInt("post_id"));
+        postTag.setTagId(resultSet.getInt("tag_id"));
         return postTag;
     }
 }

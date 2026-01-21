@@ -23,7 +23,7 @@ public class UserRepository implements Repository<UserEntity> {
 
     @Override
     public void create(UserEntity user) {
-        String sql = crudQueries.createQuery("User", "userName, email, password, role, createdAt");
+        String sql = crudQueries.createQuery("users", "user_name, email, password, role, created_at");
 
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -50,7 +50,7 @@ public class UserRepository implements Repository<UserEntity> {
 
     @Override
     public UserEntity findByInteger(int id) {
-        String sql = crudQueries.getByIntegerQuery(id, "User", "userId");
+        String sql = crudQueries.getByIntegerQuery(id, "users", "user_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -67,7 +67,7 @@ public class UserRepository implements Repository<UserEntity> {
 
     @Override
     public UserEntity findByString(String identifier) {
-        String sql = crudQueries.getStringQuery(identifier, "User", "email");
+        String sql = crudQueries.getStringQuery(identifier, "users", "email");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -84,7 +84,7 @@ public class UserRepository implements Repository<UserEntity> {
 
     @Override
     public List<UserEntity> findAll() {
-        String sql = crudQueries.getAllQuery("User");
+        String sql = crudQueries.getAllQuery("users");
 //        System.out.println(sql);
         List<UserEntity> users = new ArrayList<>();
         
@@ -103,7 +103,7 @@ public class UserRepository implements Repository<UserEntity> {
 
     @Override
     public void updateById(int id) {
-        String sql = crudQueries.updateByIdQuery(id, "User", "userName = ?, email = ?, password = ?, role = ?", "userId");
+        String sql = crudQueries.updateByIdQuery(id, "users", "user_name = ?, email = ?, password = ?, role = ?", "user_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -121,7 +121,7 @@ public class UserRepository implements Repository<UserEntity> {
 
     @Override
     public void delete(int id) {
-        String sql = crudQueries.deleteByIdQuery(id, "User", "userId");
+        String sql = crudQueries.deleteByIdQuery(id, "users", "user_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -134,12 +134,12 @@ public class UserRepository implements Repository<UserEntity> {
 
     private UserEntity mapResultSetToUser(ResultSet resultSet) throws SQLException {
         UserEntity user = new UserEntity();
-        user.setUserId(resultSet.getInt("userId"));
-        user.setUserName(resultSet.getString("userName"));
+        user.setUserId(resultSet.getInt("user_id"));
+        user.setUserName(resultSet.getString("user_name"));
         user.setEmail(resultSet.getString("email"));
         user.setPassword(resultSet.getString("password"));
         user.setRole(resultSet.getString("role"));
-        user.setCreatedAt(resultSet.getTimestamp("createdAt").toLocalDateTime());
+        user.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
         return user;
     }
 }

@@ -23,7 +23,7 @@ public class CommentRepository implements Repository<CommentEntity> {
 
     @Override
     public void create(CommentEntity comment) {
-        String sql = crudQueries.createQuery("Comment", "content, createdAt, postId, userId");
+        String sql = crudQueries.createQuery("comments", "content, created_at, post_id, user_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -49,7 +49,7 @@ public class CommentRepository implements Repository<CommentEntity> {
 
     @Override
     public CommentEntity findByInteger(int id) {
-        String sql = crudQueries.getByIntegerQuery(id, "Comment", "commentId");
+        String sql = crudQueries.getByIntegerQuery(id, "comments", "comment_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -66,7 +66,7 @@ public class CommentRepository implements Repository<CommentEntity> {
 
     @Override
     public CommentEntity findByString(String identifier) {
-        String sql = crudQueries.getStringQuery(identifier, "Comment", "content");
+        String sql = crudQueries.getStringQuery(identifier, "comments", "content");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -83,7 +83,7 @@ public class CommentRepository implements Repository<CommentEntity> {
 
     @Override
     public List<CommentEntity> findAll() {
-        String sql = crudQueries.getAllQuery("Comment");
+        String sql = crudQueries.getAllQuery("comments");
         List<CommentEntity> comments = new ArrayList<>();
         
         try (Connection connection = connectionFactory.createConnection();
@@ -101,7 +101,7 @@ public class CommentRepository implements Repository<CommentEntity> {
 
     @Override
     public void updateById(int id) {
-        String sql = crudQueries.updateByIdQuery(id, "Comment", "content = ?, postId = ?, userId = ?", "commentId");
+        String sql = crudQueries.updateByIdQuery(id, "comments", "content = ?, postId = ?, userId = ?", "comment_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -118,7 +118,7 @@ public class CommentRepository implements Repository<CommentEntity> {
 
     @Override
     public void delete(int id) {
-        String sql = crudQueries.deleteByIdQuery(id, "Comment", "commentId");
+        String sql = crudQueries.deleteByIdQuery(id, "comments", "comment_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -131,11 +131,11 @@ public class CommentRepository implements Repository<CommentEntity> {
 
     private CommentEntity mapResultSetToComment(ResultSet resultSet) throws SQLException {
         CommentEntity comment = new CommentEntity();
-        comment.setCommentId(resultSet.getInt("commentId"));
+        comment.setCommentId(resultSet.getInt("comment_id"));
         comment.setContent(resultSet.getString("content"));
-        comment.setCreatedAt(resultSet.getTimestamp("createdAt").toLocalDateTime());
-        comment.setPostId(resultSet.getInt("postId"));
-        comment.setUserId(resultSet.getInt("userId"));
+        comment.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
+        comment.setPostId(resultSet.getInt("post_id"));
+        comment.setUserId(resultSet.getInt("user_id"));
         return comment;
     }
 }

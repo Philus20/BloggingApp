@@ -23,7 +23,7 @@ public class ReviewRepository implements Repository<ReviewEntity> {
 
     @Override
     public void create(ReviewEntity review) {
-        String sql = crudQueries.createQuery("Review", "rating, comment, userId, postId");
+        String sql = crudQueries.createQuery("reviews", "rating, comment, user_id, post_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -49,7 +49,7 @@ public class ReviewRepository implements Repository<ReviewEntity> {
 
     @Override
     public ReviewEntity findByInteger(int id) {
-        String sql = crudQueries.getByIntegerQuery(id, "Review", "reviewId");
+        String sql = crudQueries.getByIntegerQuery(id, "reviews", "review_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -66,7 +66,7 @@ public class ReviewRepository implements Repository<ReviewEntity> {
 
     @Override
     public ReviewEntity findByString(String identifier) {
-        String sql = crudQueries.getStringQuery(identifier, "Review", "comment");
+        String sql = crudQueries.getStringQuery(identifier, "reviews", "comment");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -83,7 +83,7 @@ public class ReviewRepository implements Repository<ReviewEntity> {
 
     @Override
     public List<ReviewEntity> findAll() {
-        String sql = crudQueries.getAllQuery("Review");
+        String sql = crudQueries.getAllQuery("reviews");
         List<ReviewEntity> reviews = new ArrayList<>();
         
         try (Connection connection = connectionFactory.createConnection();
@@ -101,7 +101,7 @@ public class ReviewRepository implements Repository<ReviewEntity> {
 
     @Override
     public void updateById(int id) {
-        String sql = crudQueries.updateByIdQuery(id, "Review", "rating = ?, comment = ?, userId = ?, postId = ?", "reviewId");
+        String sql = crudQueries.updateByIdQuery(id, "reviews", "rating = ?, comment = ?, user_id = ?, post_id = ?", "review_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -119,7 +119,7 @@ public class ReviewRepository implements Repository<ReviewEntity> {
 
     @Override
     public void delete(int id) {
-        String sql = crudQueries.deleteByIdQuery(id, "Review", "reviewId");
+        String sql = crudQueries.deleteByIdQuery(id, "reviews", "review_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -132,11 +132,11 @@ public class ReviewRepository implements Repository<ReviewEntity> {
 
     private ReviewEntity mapResultSetToReview(ResultSet resultSet) throws SQLException {
         ReviewEntity review = new ReviewEntity();
-        review.setReviewId(resultSet.getInt("reviewId"));
+        review.setReviewId(resultSet.getInt("review_id"));
         review.setRating(resultSet.getInt("rating"));
         review.setComment(resultSet.getString("comment"));
-        review.setUserId(resultSet.getInt("userId"));
-        review.setPostId(resultSet.getInt("postId"));
+        review.setUserId(resultSet.getInt("user_id"));
+        review.setPostId(resultSet.getInt("post_id"));
         return review;
     }
 }
