@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="org.example.bloggingapp.controller.LoginController"
+      styleClass="login-container" spacing="20" alignment="CENTER">
+    
+    <padding>
+        <Insets top="40" right="40" bottom="40" left="40"/>
+    </padding>
+    
+    <!-- Login Form Card -->
+    <VBox styleClass="login-card" spacing="20" alignment="CENTER">
+        <padding>
+            <Insets top="30" right="40" bottom="30" left="40"/>
+        </padding>
+        
+        <!-- App Title -->
+        <Label text="📱 Blogging Platform" styleClass="app-title"/>
+        <Label text="Sign in to your account" styleClass="subtitle"/>
+        
+        <!-- Email Field -->
+        <VBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Email" styleClass="field-label"/>
+            <TextField fx:id="emailField" promptText="Enter your email" 
+                       styleClass="input-field" prefWidth="300"/>
+        </VBox>
+        
+        <!-- Password Field -->
+        <VBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Password" styleClass="field-label"/>
+            <PasswordField fx:id="passwordField" promptText="Enter your password" 
+                           styleClass="input-field" prefWidth="300"/>
+        </VBox>
+        
+        <!-- Remember Me -->
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <CheckBox fx:id="rememberMe" text="Remember me" styleClass="checkbox"/>
+        </HBox>
+        
+        <!-- Login Button -->
+        <Button fx:id="loginButton" text="Sign In" styleClass="login-button" 
+                prefWidth="300" prefHeight="45" onAction="#handleLogin"/>
+        
+        <!-- Links -->
+        <HBox spacing="20" alignment="CENTER">
+            <Hyperlink fx:id="forgotPasswordLink" text="Forgot password?" 
+                      styleClass="link" onAction="#handleForgotPassword"/>
+            <Hyperlink fx:id="signupLink" text="Create account" 
+                      styleClass="link" onAction="#handleSignup"/>
+        </HBox>
+        
+    </VBox>
+    
+</VBox>

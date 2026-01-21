@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane prefHeight="600" prefWidth="900" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.bloggingapp.controller.LoginController">
+
+    <!-- Root Layout -->
+    <VBox alignment="CENTER" spacing="30" stylesheets="@login.css" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
+
+        <!-- Header -->
+        <HBox alignment="CENTER_LEFT" prefWidth="800" spacing="10">
+            <Label styleClass="app-title" text="ModernApp" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button styleClass="secondary-button" text="Help" />
+        </HBox>
+
+        <!-- Login Card -->
+        <VBox alignment="CENTER" maxWidth="420" spacing="20" styleClass="card">
+
+            <!-- Title -->
+            <VBox alignment="CENTER" spacing="5">
+                <Label styleClass="title" text="Welcome Back" />
+                <Label styleClass="subtitle" text="Please enter your details to sign in." />
+            </VBox>
+
+            <!-- Email -->
+            <VBox spacing="5">
+                <Label text="Email Address" />
+                <TextField fx:id="emailField" promptText="name@company.com" />
+            </VBox>
+
+            <!-- Password -->
+            <VBox spacing="5">
+                <HBox alignment="CENTER_LEFT">
+                    <Label text="Password" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Hyperlink text="Forgot password?" />
+                </HBox>
+                <PasswordField fx:id="passwordField" promptText="••••••••" />
+            </VBox>
+
+            <!-- Remember Me -->
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <CheckBox fx:id="rememberMe" />
+                <Label text="Remember this device" />
+            </HBox>
+
+            <!-- Sign In -->
+            <Button maxWidth="Infinity" onAction="" prefHeight="44" styleClass="primary-button" text="Sign In" />
+
+            <!-- Divider -->
+            <Separator />
+
+            <!-- Footer -->
+            <HBox alignment="CENTER" spacing="5">
+                <Label text="Don't have an account?" />
+                <Hyperlink text="Create an account" />
+            </HBox>
+
+        </VBox>
+
+        <!-- Footer -->
+        <Label styleClass="footer" text="© 2024 ModernApp. All rights reserved." />
+
+    </VBox>
+</AnchorPane>

@@ -1,0 +1,46 @@
+.root {
+    -fx-font-family: "Manrope";
+    -fx-background-color: #fdfdfc;
+}
+
+.app-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a545b;
+}
+
+.card {
+    -fx-background-color: white;
+    -fx-padding: 30;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(26,84,91,0.15), 20, 0, 0, 8);
+}
+
+.title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+.subtitle {
+    -fx-text-fill: #6b7280;
+}
+
+.primary-button {
+    -fx-background-color: #1a545b;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+}
+
+.secondary-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #1a545b;
+    -fx-text-fill: #1a545b;
+    -fx-background-radius: 8;
+}
+
+.footer {
+    -fx-text-fill: #9ca3af;
+    -fx-font-size: 11px;
+}

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane prefHeight="650" prefWidth="900" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.bloggingapp.controller.SignupController">
+
+    <VBox alignment="CENTER" spacing="30" stylesheets="@signup.css" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
+
+        <!-- Header -->
+        <HBox alignment="CENTER_LEFT" prefWidth="800" spacing="10">
+            <Label styleClass="app-title" text="ModernApp" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button styleClass="secondary-button" text="Help" />
+        </HBox>
+
+        <!-- Signup Card -->
+        <VBox alignment="CENTER" maxWidth="480" spacing="18" styleClass="card">
+
+            <!-- Title -->
+            <VBox alignment="CENTER" spacing="6">
+                <Label styleClass="title" text="Create your account" />
+                <Label styleClass="subtitle" text="Join thousands of professionals today." />
+            </VBox>
+
+            <!-- Full Name -->
+            <VBox spacing="5">
+                <Label text="Full Name" />
+                <TextField fx:id="nameField" promptText="John Doe" />
+            </VBox>
+
+            <!-- Email -->
+            <VBox spacing="5">
+                <Label text="Email Address" />
+                <TextField fx:id="emailField" promptText="name@company.com" />
+            </VBox>
+
+            <!-- Password -->
+            <VBox spacing="5">
+                <Label text="Password" />
+                <PasswordField fx:id="passwordField" promptText="••••••••" />
+                <ProgressBar fx:id="passwordStrength" prefWidth="Infinity" />
+                <Label styleClass="hint" text="Strong password" />
+            </VBox>
+
+            <!-- Terms -->
+            <Label styleClass="terms" text="By clicking Create Account, you agree to our Terms of Service and Privacy Policy." wrapText="true" />
+
+            <!-- Submit -->
+            <Button maxWidth="Infinity" onAction="" prefHeight="44" styleClass="primary-button" text="Create Account" />
+
+            <Separator />
+
+            <!-- Social -->
+            <HBox spacing="10">
+                <Button maxWidth="Infinity" text="Google" HBox.hgrow="ALWAYS" />
+                <Button maxWidth="Infinity" text="GitHub" HBox.hgrow="ALWAYS" />
+            </HBox>
+
+            <!-- Footer -->
+            <HBox alignment="CENTER" spacing="5">
+                <Label text="Already have an account?" />
+                <Hyperlink text="Log in" />
+            </HBox>
+
+        </VBox>
+
+        <!-- Footer -->
+        <Label styleClass="footer" text="© 2024 ModernApp. All rights reserved." />
+
+    </VBox>
+</AnchorPane>
