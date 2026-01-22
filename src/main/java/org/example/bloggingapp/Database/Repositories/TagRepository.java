@@ -3,7 +3,7 @@ package org.example.bloggingapp.Database.Repositories;
 import org.example.bloggingapp.Database.DbInterfaces.ICrudQueries;
 import org.example.bloggingapp.Database.DbInterfaces.IConnection;
 import org.example.bloggingapp.Database.DbInterfaces.Repository;
-import org.example.bloggingapp.Database.Services.CrudQueries;
+import org.example.bloggingapp.Services.CrudQueries;
 import org.example.bloggingapp.Database.factories.ConnectionFactory;
 import org.example.bloggingapp.Models.TagEntity;
 

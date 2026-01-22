@@ -24,7 +24,7 @@ public class DashboardApp extends Application {
         cacheManager.start(1); // Cleanup every minute
         
         // Load FXML
-        FXMLLoader fxmlLoader = new FXMLLoader(DashboardApp.class.getResource("/org/example/bloggingapp/Dashboard/dashboard.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(DashboardApp.class.getResource("/org/example/bloggingapp/Screens/fxml/dashboard.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 1200, 800);
         
         // Get controller reference

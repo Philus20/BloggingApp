@@ -13,12 +13,12 @@ import org.example.bloggingapp.Models.ReviewEntity;
 import org.example.bloggingapp.Models.TagEntity;
 import org.example.bloggingapp.Models.PostTagEntity;
 import org.example.bloggingapp.Database.factories.ServiceFactory;
-import org.example.bloggingapp.Database.Services.PostService;
-import org.example.bloggingapp.Database.Services.CommentService;
-import org.example.bloggingapp.Database.Services.UserService;
-import org.example.bloggingapp.Database.Services.ReviewService;
-import org.example.bloggingapp.Database.Services.TagService;
-import org.example.bloggingapp.Database.Services.PostTagService;
+import org.example.bloggingapp.Services.PostService;
+import org.example.bloggingapp.Services.CommentService;
+import org.example.bloggingapp.Services.UserService;
+import org.example.bloggingapp.Services.ReviewService;
+import org.example.bloggingapp.Services.TagService;
+import org.example.bloggingapp.Services.PostTagService;
 import org.example.bloggingapp.Database.Utils.RegexPatterns;
 
 import java.time.LocalDateTime;
@@ -117,6 +117,9 @@ public class MainFeedController {
         System.out.println("🚀 Initializing MainFeedController");
         
         try {
+            // Setup database tables if they don't exist
+
+            
             // Initialize services using ServiceFactory
             this.serviceFactory = ServiceFactory.getInstance();
             this.postService = serviceFactory.getPostService();

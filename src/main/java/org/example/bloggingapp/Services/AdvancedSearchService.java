@@ -1,4 +1,4 @@
-package org.example.bloggingapp.Database.Services;
+package org.example.bloggingapp.Services;
 
 import org.example.bloggingapp.Models.PostEntity;
 import org.example.bloggingapp.Exceptions.DatabaseException;

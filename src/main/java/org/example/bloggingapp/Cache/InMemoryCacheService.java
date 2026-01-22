@@ -1,5 +1,7 @@
 package org.example.bloggingapp.Cache;
 
+import org.example.bloggingapp.Database.DbInterfaces.CacheService;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;

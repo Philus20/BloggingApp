@@ -3,6 +3,8 @@ package org.example.bloggingapp.Cache;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Central cache manager for monitoring and maintaining all cache instances
@@ -13,6 +15,7 @@ public class CacheManager {
     private static CacheManager instance;
     private final ScheduledExecutorService cleanupExecutor;
     private volatile boolean isRunning;
+    private final Map<String, InMemoryCacheService<?, ?>> cacheRegistry;
     
     private CacheManager() {
         this.cleanupExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
@@ -21,6 +24,7 @@ public class CacheManager {
             return t;
         });
         this.isRunning = false;
+        this.cacheRegistry = new ConcurrentHashMap<>();
     }
     
     /**
@@ -148,5 +152,60 @@ public class CacheManager {
      */
     public void forceCleanup() {
         performCleanup();
+    }
+    
+    /**
+     * Registers a cache instance with the manager
+     * @param name cache name/identifier
+     * @param cache cache instance
+     */
+    public void registerCache(String name, InMemoryCacheService<?, ?> cache) {
+        cacheRegistry.put(name, cache);
+    }
+    
+    /**
+     * Gets the total size of all registered caches
+     * @return total number of entries across all caches
+     */
+    public int size() {
+        int totalSize = 0;
+        for (InMemoryCacheService<?, ?> cache : cacheRegistry.values()) {
+            totalSize += cache.size();
+        }
+        return totalSize;
+    }
+    
+    /**
+     * Clears a specific cache by name
+     * @param cacheName the name of the cache to clear
+     */
+    public void clear(String cacheName) {
+        InMemoryCacheService<?, ?> cache = cacheRegistry.get(cacheName);
+        if (cache != null) {
+            cache.clear();
+        }
+    }
+    
+    /**
+     * Clears all registered caches
+     */
+    public void clearAll() {
+        for (InMemoryCacheService<?, ?> cache : cacheRegistry.values()) {
+            cache.clear();
+        }
+    }
+    
+    /**
+     * Cleans up expired entries across all caches
+     * @return total number of expired entries removed
+     */
+    public int cleanupExpired() {
+        int totalCleaned = 0;
+        for (InMemoryCacheService<?, ?> cache : cacheRegistry.values()) {
+            if (cache instanceof InMemoryCacheService) {
+                totalCleaned += ((InMemoryCacheService<?, ?>) cache).cleanupExpired();
+            }
+        }
+        return totalCleaned;
     }
 }

@@ -6,12 +6,12 @@ import org.example.bloggingapp.Database.Repositories.ReviewRepository;
 import org.example.bloggingapp.Database.Repositories.UserRepository;
 import org.example.bloggingapp.Database.Repositories.TagRepository;
 import org.example.bloggingapp.Database.Repositories.PostTagRepository;
-import org.example.bloggingapp.Database.Services.CommentService;
-import org.example.bloggingapp.Database.Services.PostService;
-import org.example.bloggingapp.Database.Services.ReviewService;
-import org.example.bloggingapp.Database.Services.UserService;
-import org.example.bloggingapp.Database.Services.TagService;
-import org.example.bloggingapp.Database.Services.PostTagService;
+import org.example.bloggingapp.Services.CommentService;
+import org.example.bloggingapp.Services.PostService;
+import org.example.bloggingapp.Services.ReviewService;
+import org.example.bloggingapp.Services.UserService;
+import org.example.bloggingapp.Services.TagService;
+import org.example.bloggingapp.Services.PostTagService;
 
 /**
  * 🏭 Service Factory - Manages service instances following clean architecture

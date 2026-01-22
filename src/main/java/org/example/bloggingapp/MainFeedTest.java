@@ -10,7 +10,7 @@ public class MainFeedTest extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         try {
-            FXMLLoader fxmlLoader = new FXMLLoader(MainFeedTest.class.getResource("/org/example/bloggingapp/fxml/main_feed.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(MainFeedTest.class.getResource("/org/example/bloggingapp/Screens/fxml/main_feed.fxml"));
             Parent root = fxmlLoader.load();
             
             Scene scene = new Scene(root, 1000, 700);

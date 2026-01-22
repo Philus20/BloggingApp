@@ -1,10 +1,9 @@
-package org.example.bloggingapp.Database.Services;
+package org.example.bloggingapp.Services;
 
 import org.example.bloggingapp.Models.UserEntity;
 import org.example.bloggingapp.Database.Utils.RegexPatterns;
 import org.example.bloggingapp.Exceptions.AuthenticationException;
 import org.example.bloggingapp.Exceptions.DatabaseException;
-import org.example.bloggingapp.Exceptions.EntityNotFoundException;
 import org.example.bloggingapp.Exceptions.ValidationException;
 
 import java.time.LocalDateTime;

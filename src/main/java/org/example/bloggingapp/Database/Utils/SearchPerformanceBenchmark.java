@@ -1,7 +1,7 @@
 package org.example.bloggingapp.Database.Utils;
 
-import org.example.bloggingapp.Database.Services.PostSearchService;
-import org.example.bloggingapp.Database.Services.PostService;
+import org.example.bloggingapp.Services.PostSearchService;
+import org.example.bloggingapp.Services.PostService;
 import org.example.bloggingapp.Models.PostEntity;
 import org.example.bloggingapp.Exceptions.DatabaseException;
 import org.example.bloggingapp.Exceptions.ValidationException;

@@ -10,8 +10,8 @@ import javafx.stage.Stage;
 
 import org.example.bloggingapp.Models.UserEntity;
 import org.example.bloggingapp.Database.factories.ServiceFactory;
-import org.example.bloggingapp.Database.Services.UserService;
-import org.example.bloggingapp.Database.Services.AuthenticationService;
+import org.example.bloggingapp.Services.UserService;
+import org.example.bloggingapp.Services.AuthenticationService;
 import org.example.bloggingapp.Database.Utils.RegexPatterns;
 import org.example.bloggingapp.Exceptions.AuthenticationException;
 import org.example.bloggingapp.Exceptions.ValidationException;
@@ -139,7 +139,7 @@ public class SignupController {
     
     private void navigateToDashboard(UserEntity user) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/bloggingapp/fxml/main_feed.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/bloggingapp/Screens/fxml/main_feed.fxml"));
             Parent root = loader.load();
             
             // Pass current user to MainFeedController

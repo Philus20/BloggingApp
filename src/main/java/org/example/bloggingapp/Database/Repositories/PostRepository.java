@@ -3,7 +3,7 @@ package org.example.bloggingapp.Database.Repositories;
 import org.example.bloggingapp.Database.DbInterfaces.ICrudQueries;
 import org.example.bloggingapp.Database.DbInterfaces.IConnection;
 import org.example.bloggingapp.Database.DbInterfaces.Repository;
-import org.example.bloggingapp.Database.Services.CrudQueries;
+import org.example.bloggingapp.Services.CrudQueries;
 import org.example.bloggingapp.Database.factories.ConnectionFactory;
 import org.example.bloggingapp.Models.PostEntity;
 
@@ -101,7 +101,7 @@ public class PostRepository implements Repository<PostEntity> {
 
     @Override
     public void updateById(int id) {
-        String sql = crudQueries.updateByIdQuery(id, "posts", "title = ?, content = ?, user_id = ?", "post_id");
+        String sql = crudQueries.updateByIdQuery(id, "posts", "title = ?, content = ?, user_id = ?, status = ?, views = ?, author_name = ?", "post_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -109,6 +109,27 @@ public class PostRepository implements Repository<PostEntity> {
             statement.setString(1, "updated_title");
             statement.setString(2, "updated_content");
             statement.setInt(3, 1);
+            statement.setString(4, "Published");
+            statement.setInt(5, 0);
+            statement.setString(6, "Test Author");
+            
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to update post", e);
+        }
+    }
+    
+    // New method to update with PostEntity data (using only existing schema columns)
+    public void updatePost(int id, PostEntity post) {
+        String sql = "UPDATE posts SET title = ?, content = ?, user_id = ? WHERE post_id = ?";
+        
+        try (Connection connection = connectionFactory.createConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            
+            statement.setString(1, post.getTitle());
+            statement.setString(2, post.getContent());
+            statement.setInt(3, post.getUserId());
+            statement.setInt(4, id);
             
             statement.executeUpdate();
         } catch (SQLException e) {

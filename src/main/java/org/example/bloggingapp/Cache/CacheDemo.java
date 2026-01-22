@@ -1,7 +1,7 @@
 package org.example.bloggingapp.Cache;
 
-import org.example.bloggingapp.Database.Services.CachedPostService;
-import org.example.bloggingapp.Database.Services.CachedUserService;
+import org.example.bloggingapp.Services.CachedPostService;
+import org.example.bloggingapp.Services.CachedUserService;
 import org.example.bloggingapp.Database.Repositories.PostRepository;
 import org.example.bloggingapp.Models.PostEntity;
 import org.example.bloggingapp.Models.UserEntity;

@@ -1,4 +1,4 @@
-package org.example.bloggingapp.Database.Services;
+package org.example.bloggingapp.Services;
 
 import org.example.bloggingapp.Database.DbInterfaces.IService;
 import org.example.bloggingapp.Database.DbInterfaces.Repository;
@@ -8,7 +8,7 @@ import org.example.bloggingapp.Exceptions.DatabaseException;
 import org.example.bloggingapp.Exceptions.EntityNotFoundException;
 import org.example.bloggingapp.Exceptions.ServiceException;
 import org.example.bloggingapp.Exceptions.ValidationException;
-import org.example.bloggingapp.Cache.CacheService;
+import org.example.bloggingapp.Database.DbInterfaces.CacheService;
 import org.example.bloggingapp.Cache.InMemoryCacheService;
 
 import java.time.LocalDateTime;
@@ -26,7 +26,7 @@ public class UserService implements IService<UserEntity> {
     private final CacheService<String, List<UserEntity>> allUsersCache;
     
     public UserService(Repository<UserEntity> userRepository) {
-        this.userRepository = new UserRepository();
+        this.userRepository = userRepository != null ? userRepository : new UserRepository();
         // Initialize caches with different configurations for different use cases
         this.userCache = new InMemoryCacheService<>(1000, 15 * 60 * 1000); // 1000 users, 15 minutes
         this.userByEmailCache = new InMemoryCacheService<>(500, 20 * 60 * 1000); // 500 emails, 20 minutes
@@ -125,6 +125,10 @@ public class UserService implements IService<UserEntity> {
     @Override
     public List<UserEntity> findAll() throws DatabaseException {
         try {
+            if (userRepository == null) {
+                throw new DatabaseException("REPOSITORY_NULL", "User repository is not initialized");
+            }
+            
             // Try cache first
             Optional<List<UserEntity>> cachedUsers = allUsersCache.get("all");
             if (cachedUsers.isPresent()) {
@@ -138,6 +142,8 @@ public class UserService implements IService<UserEntity> {
             allUsersCache.put("all", users);
             
             return users;
+        } catch (DatabaseException e) {
+            throw e;
         } catch (Exception e) {
             throw new DatabaseException("USER_FIND_ALL_ERROR", "Failed to find all users", e);
         }

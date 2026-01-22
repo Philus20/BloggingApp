@@ -1,8 +1,8 @@
 package org.example.bloggingapp.Demo;
 
 import org.example.bloggingapp.Database.Repositories.PostRepository;
-import org.example.bloggingapp.Database.Services.PostService;
-import org.example.bloggingapp.Database.Services.PostSearchService;
+import org.example.bloggingapp.Services.PostService;
+import org.example.bloggingapp.Services.PostSearchService;
 import org.example.bloggingapp.Database.Utils.SearchPerformanceBenchmark;
 import org.example.bloggingapp.controller.SearchController;
 import org.example.bloggingapp.Models.PostEntity;

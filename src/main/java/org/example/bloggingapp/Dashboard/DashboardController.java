@@ -3,24 +3,26 @@ package org.example.bloggingapp.Dashboard;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import org.example.bloggingapp.Cache.CacheManager;
-import org.example.bloggingapp.Database.Services.PostService;
-import org.example.bloggingapp.Database.Services.UserService;
+import org.example.bloggingapp.Services.PostService;
+import org.example.bloggingapp.Services.UserService;
 import org.example.bloggingapp.Models.PostEntity;
 import org.example.bloggingapp.Models.UserEntity;
-import org.example.bloggingapp.Dashboard.PerformanceMonitor;
-import org.example.bloggingapp.Dashboard.CacheOptimizationService;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.io.IOException;
 
 /**
  * Dashboard Controller for managing posts, viewing performance metrics, and performing optimizations
@@ -29,6 +31,11 @@ public class DashboardController {
     
     @FXML private TabPane mainTabPane;
     
+    // Navigation Buttons
+    @FXML private Button mainFeedButton;
+    @FXML private Button loginButton;
+    @FXML private Button signupButton;
+    
     // Posts Management Tab
     @FXML private TableView<PostEntity> postsTable;
     @FXML private TableColumn<PostEntity, Integer> postIdColumn;
@@ -36,9 +43,15 @@ public class DashboardController {
     @FXML private TableColumn<PostEntity, String> contentColumn;
     @FXML private TableColumn<PostEntity, Integer> userIdColumn;
     @FXML private TableColumn<PostEntity, String> createdAtColumn;
+    @FXML private TableColumn<PostEntity, String> statusColumn;
+    @FXML private TableColumn<PostEntity, Integer> viewsColumn;
+    @FXML private TableColumn<PostEntity, String> authorNameColumn;
     @FXML private TextField titleField;
     @FXML private TextArea contentArea;
     @FXML private TextField userIdField;
+    @FXML private TextField statusField;
+    @FXML private TextField viewsField;
+    @FXML private TextField authorNameField;
     @FXML private Button createPostButton;
     @FXML private Button updatePostButton;
     @FXML private Button deletePostButton;
@@ -122,6 +135,9 @@ public class DashboardController {
         contentColumn.setCellValueFactory(new PropertyValueFactory<>("content"));
         userIdColumn.setCellValueFactory(new PropertyValueFactory<>("userId"));
         createdAtColumn.setCellValueFactory(new PropertyValueFactory<>("createdAt"));
+        statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
+        viewsColumn.setCellValueFactory(new PropertyValueFactory<>("views"));
+        authorNameColumn.setCellValueFactory(new PropertyValueFactory<>("authorName"));
         
         // Make table editable
         postsTable.setEditable(true);
@@ -189,17 +205,25 @@ public class DashboardController {
             String title = titleField.getText().trim();
             String content = contentArea.getText().trim();
             String userIdText = userIdField.getText().trim();
+            String status = statusField.getText().trim();
+            String viewsText = viewsField.getText().trim();
+            String authorName = authorNameField.getText().trim();
             
             if (title.isEmpty() || content.isEmpty() || userIdText.isEmpty()) {
-                showAlert("Validation Error", "All fields are required");
+                showAlert("Validation Error", "Title, content, and User ID are required");
                 return;
             }
             
             int userId = Integer.parseInt(userIdText);
+            int views = viewsText.isEmpty() ? 0 : Integer.parseInt(viewsText);
+            
             PostEntity post = new PostEntity();
             post.setTitle(title);
             post.setContent(content);
             post.setUserId(userId);
+            post.setStatus(status.isEmpty() ? "Draft" : status);
+            post.setViews(views);
+            post.setAuthorName(authorName.isEmpty() ? "" : authorName);
             
             PostEntity createdPost = postService.create(post);
             postsData.add(createdPost);
@@ -226,16 +250,24 @@ public class DashboardController {
             String title = titleField.getText().trim();
             String content = contentArea.getText().trim();
             String userIdText = userIdField.getText().trim();
+            String status = statusField.getText().trim();
+            String viewsText = viewsField.getText().trim();
+            String authorName = authorNameField.getText().trim();
             
             if (title.isEmpty() || content.isEmpty() || userIdText.isEmpty()) {
-                showAlert("Validation Error", "All fields are required");
+                showAlert("Validation Error", "Title, content, and User ID are required");
                 return;
             }
             
             int userId = Integer.parseInt(userIdText);
+            int views = viewsText.isEmpty() ? selectedPost.getViews() : Integer.parseInt(viewsText);
+            
             selectedPost.setTitle(title);
             selectedPost.setContent(content);
             selectedPost.setUserId(userId);
+            selectedPost.setStatus(status.isEmpty() ? selectedPost.getStatus() : status);
+            selectedPost.setViews(views);
+            selectedPost.setAuthorName(authorName.isEmpty() ? selectedPost.getAuthorName() : authorName);
             
             PostEntity updatedPost = postService.update(selectedPost.getPostId(), selectedPost);
             if (updatedPost != null) {
@@ -322,12 +354,18 @@ public class DashboardController {
         titleField.setText(post.getTitle());
         contentArea.setText(post.getContent());
         userIdField.setText(String.valueOf(post.getUserId()));
+        statusField.setText(post.getStatus());
+        viewsField.setText(String.valueOf(post.getViews()));
+        authorNameField.setText(post.getAuthorName());
     }
     
     private void clearPostFields() {
         titleField.clear();
         contentArea.clear();
         userIdField.clear();
+        statusField.clear();
+        viewsField.clear();
+        authorNameField.clear();
     }
     
     // Performance Metrics Methods
@@ -591,6 +629,65 @@ public class DashboardController {
         }
         if (cacheManager != null) {
             cacheManager.stop();
+        }
+    }
+    
+    // ==================== NAVIGATION METHODS ====================
+    
+    @FXML
+    private void goToMainFeed() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/bloggingapp/screens/MainFeed/MainFeed.fxml"));
+            Parent root = loader.load();
+            
+            Stage stage = (Stage) mainFeedButton.getScene().getWindow();
+            Scene scene = new Scene(root, 1000, 700);
+            stage.setTitle("📱 Blogging Platform - Main Feed");
+            stage.setScene(scene);
+            stage.show();
+            
+            System.out.println("📱 Navigated to Main Feed");
+        } catch (IOException e) {
+            System.err.println("❌ Failed to load Main Feed: " + e.getMessage());
+            showAlert("Navigation Error", "Failed to load Main Feed. Please try again.");
+        }
+    }
+    
+    @FXML
+    private void goToLogin() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/bloggingapp/screens/LoginResources/LoginPage.fxml"));
+            Parent root = loader.load();
+            
+            Stage stage = (Stage) loginButton.getScene().getWindow();
+            Scene scene = new Scene(root, 900, 600);
+            stage.setTitle("Blogging App - Login");
+            stage.setScene(scene);
+            stage.show();
+            
+            System.out.println("🔐 Navigated to Login Page");
+        } catch (IOException e) {
+            System.err.println("❌ Failed to load Login: " + e.getMessage());
+            showAlert("Navigation Error", "Failed to load Login page. Please try again.");
+        }
+    }
+    
+    @FXML
+    private void goToSignup() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/bloggingapp/screens/Signup/Signup.fxml"));
+            Parent root = loader.load();
+            
+            Stage stage = (Stage) signupButton.getScene().getWindow();
+            Scene scene = new Scene(root, 900, 650);
+            stage.setTitle("Blogging App - Sign Up");
+            stage.setScene(scene);
+            stage.show();
+            
+            System.out.println("📝 Navigated to Sign Up Page");
+        } catch (IOException e) {
+            System.err.println("❌ Failed to load Sign Up: " + e.getMessage());
+            showAlert("Navigation Error", "Failed to load Sign Up page. Please try again.");
         }
     }
 }

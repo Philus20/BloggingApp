@@ -5,13 +5,27 @@
 <?import javafx.scene.chart.*?>
 <?import javafx.geometry.Insets?>
 
-<TabPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" 
-         fx:controller="org.example.bloggingapp.Dashboard.DashboardController"
-         tabClosingPolicy="UNAVAILABLE">
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="org.example.bloggingapp.Dashboard.WorkingDashboardController"
+      spacing="10" style="-fx-padding: 10;">
+    
+    <!-- Navigation Bar -->
+    <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-background-color: #f0f0f0; -fx-padding: 10;">
+        <Label text="📊 Blogging App Dashboard" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Button fx:id="mainFeedButton" text="📱 Main Feed" onAction="#goToMainFeed" 
+                style="-fx-background-color: #1d9bf0; -fx-text-fill: white;" />
+        <Button fx:id="loginButton" text="🔐 Login" onAction="#goToLogin" 
+                style="-fx-background-color: #1d9bf0; -fx-text-fill: white;" />
+        <Button fx:id="signupButton" text="📝 Sign Up" onAction="#goToSignup" 
+                style="-fx-background-color: #1d9bf0; -fx-text-fill: white;" />
+    </HBox>
+    
+    <TabPane fx:id="mainTabPane" tabClosingPolicy="UNAVAILABLE">
     
     <!-- Posts Management Tab -->
     <Tab text="Posts Management">
-        <VBox spacing="10" padding="10">
+        <VBox spacing="10" style="-fx-padding: 10;">
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <Label text="Search:" />
                 <TextField fx:id="searchPostField" prefWidth="200" promptText="Search posts..." />
@@ -49,7 +63,7 @@
     
     <!-- Performance Metrics Tab -->
     <Tab text="Performance Metrics">
-        <VBox spacing="15" padding="15">
+        <VBox spacing="15" style="-fx-padding: 15;">
             <HBox spacing="20" alignment="CENTER">
                 <VBox spacing="5" alignment="CENTER">
                     <Label text="Total Posts" style="-fx-font-size: 14px; -fx-font-weight: bold;" />
@@ -75,10 +89,10 @@
             
             <HBox spacing="15" alignment="CENTER">
                 <VBox spacing="5">
-                    <LineChart fx:id="hitRateChart" prefWidth="400" prefHeight="250" />
+                    <VBox fx:id="hitRateChartContainer" prefWidth="400" prefHeight="250" />
                 </VBox>
                 <VBox spacing="5">
-                    <LineChart fx:id="responseTimeChart" prefWidth="400" prefHeight="250" />
+                    <VBox fx:id="responseTimeChartContainer" prefWidth="400" prefHeight="250" />
                 </VBox>
             </HBox>
             
@@ -92,7 +106,7 @@
     
     <!-- Cache Management Tab -->
     <Tab text="Cache Management">
-        <VBox spacing="15" padding="15">
+        <VBox spacing="15" style="-fx-padding: 15;">
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <Button fx:id="clearPostCacheButton" text="Clear Post Cache" onAction="#handleClearPostCache" 
                         style="-fx-background-color: #FF9800; -fx-text-fill: white;" />
@@ -134,7 +148,7 @@
     
     <!-- Optimization Tab -->
     <Tab text="Optimization">
-        <VBox spacing="15" padding="15">
+        <VBox spacing="15" style="-fx-padding: 15;">
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <Button fx:id="analyzePerformanceButton" text="Analyze Performance" onAction="#handleAnalyzePerformance"
                         style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-pref-width: 150;" />
@@ -161,3 +175,4 @@
     </Tab>
     
 </TabPane>
+</VBox>

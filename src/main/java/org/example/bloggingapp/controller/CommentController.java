@@ -16,10 +16,9 @@ import javafx.stage.StageStyle;
 
 import org.example.bloggingapp.Models.PostEntity;
 import org.example.bloggingapp.Models.CommentEntity;
-import org.example.bloggingapp.Models.UserEntity;
 import org.example.bloggingapp.Database.factories.ServiceFactory;
-import org.example.bloggingapp.Database.Services.CommentService;
-import org.example.bloggingapp.Database.Services.UserService;
+import org.example.bloggingapp.Services.CommentService;
+import org.example.bloggingapp.Services.UserService;
 import org.example.bloggingapp.Database.Utils.RegexPatterns;
 
 import java.time.LocalDateTime;
@@ -136,7 +135,7 @@ public class CommentController {
             
             if (commentStage == null) {
                 // Load the comment scene
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/bloggingapp/fxml/comment_scene.fxml"));
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/bloggingapp/Screens/fxml/comment_scene.fxml"));
                 loader.setController(this);
                 Parent root = loader.load();
                 

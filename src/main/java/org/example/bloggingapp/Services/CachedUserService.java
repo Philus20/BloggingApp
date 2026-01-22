@@ -1,7 +1,8 @@
-package org.example.bloggingapp.Database.Services;
+package org.example.bloggingapp.Services;
 
-import org.example.bloggingapp.Cache.CacheService;
+import org.example.bloggingapp.Database.DbInterfaces.CacheService;
 import org.example.bloggingapp.Cache.InMemoryCacheService;
+import org.example.bloggingapp.Cache.CacheManager;
 import org.example.bloggingapp.Database.DbInterfaces.Repository;
 import org.example.bloggingapp.Database.Repositories.UserRepository;
 import org.example.bloggingapp.Models.UserEntity;
@@ -28,10 +29,21 @@ public class CachedUserService implements org.example.bloggingapp.Database.DbInt
     public CachedUserService() {
         this.userRepository = new UserRepository();
         // Initialize caches with different configurations for different use cases
+        // These caches will store real database values in memory for fast access
         this.userCache = new InMemoryCacheService<>(1000, 15 * 60 * 1000); // 1000 users, 15 minutes
         this.userByEmailCache = new InMemoryCacheService<>(500, 20 * 60 * 1000); // 500 emails, 20 minutes
         this.userByUsernameCache = new InMemoryCacheService<>(500, 20 * 60 * 1000); // 500 usernames, 20 minutes
         this.allUsersCache = new InMemoryCacheService<>(5, 5 * 60 * 1000); // 5 lists, 5 minutes
+        
+        // Register caches with CacheManager for centralized management
+        CacheManager cacheManager = CacheManager.getInstance();
+        cacheManager.registerCache("users", (InMemoryCacheService<?, ?>) userCache);
+        cacheManager.registerCache("userEmails", (InMemoryCacheService<?, ?>) userByEmailCache);
+        cacheManager.registerCache("usernames", (InMemoryCacheService<?, ?>) userByUsernameCache);
+        cacheManager.registerCache("allUsers", (InMemoryCacheService<?, ?>) allUsersCache);
+        
+        // Pre-populate cache with real database values
+        prepopulateCacheFromDatabase();
     }
     
     @Override
@@ -291,6 +303,29 @@ public class CachedUserService implements org.example.bloggingapp.Database.DbInt
             throw e;
         } catch (Exception e) {
             throw new DatabaseException("USER_FIND_USERNAME_ERROR", "Failed to find user by username: " + username, e);
+        }
+    }
+    
+    /**
+     * Pre-populates cache with real database values for better initial performance
+     */
+    private void prepopulateCacheFromDatabase() {
+        try {
+            // Load all users from database and cache them
+            List<UserEntity> allUsers = userRepository.findAll();
+            if (!allUsers.isEmpty()) {
+                allUsersCache.put("all", allUsers);
+                
+                // Cache individual users with multiple lookup keys
+                for (UserEntity user : allUsers) {
+                    userCache.put(user.getUserId(), user);
+                    userByEmailCache.put(user.getEmail(), user);
+                    userByUsernameCache.put(user.getUserName(), user);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Warning: Failed to pre-populate cache from database: " + e.getMessage());
+            // Continue without pre-population - cache will be populated on-demand
         }
     }
     

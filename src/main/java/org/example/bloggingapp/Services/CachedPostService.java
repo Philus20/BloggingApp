@@ -1,7 +1,8 @@
-package org.example.bloggingapp.Database.Services;
+package org.example.bloggingapp.Services;
 
-import org.example.bloggingapp.Cache.CacheService;
+import org.example.bloggingapp.Database.DbInterfaces.CacheService;
 import org.example.bloggingapp.Cache.InMemoryCacheService;
+import org.example.bloggingapp.Cache.CacheManager;
 import org.example.bloggingapp.Database.Repositories.PostRepository;
 import org.example.bloggingapp.Models.PostEntity;
 import org.example.bloggingapp.Exceptions.DatabaseException;
@@ -25,10 +26,21 @@ public class CachedPostService extends PostService {
     public CachedPostService(PostRepository postRepository) {
         super(postRepository);
         // Initialize caches with different configurations for different use cases
+        // These caches will store real database values in memory for fast access
         this.postCache = new InMemoryCacheService<>(500, 10 * 60 * 1000); // 500 posts, 10 minutes
         this.postByTitleCache = new InMemoryCacheService<>(200, 15 * 60 * 1000); // 200 titles, 15 minutes
         this.userPostsCache = new InMemoryCacheService<>(100, 5 * 60 * 1000); // 100 users, 5 minutes
         this.allPostsCache = new InMemoryCacheService<>(10, 2 * 60 * 1000); // 10 lists, 2 minutes
+        
+        // Register caches with CacheManager for centralized management
+        CacheManager cacheManager = CacheManager.getInstance();
+        cacheManager.registerCache("posts", (InMemoryCacheService<?, ?>) postCache);
+        cacheManager.registerCache("postTitles", (InMemoryCacheService<?, ?>) postByTitleCache);
+        cacheManager.registerCache("userPosts", (InMemoryCacheService<?, ?>) userPostsCache);
+        cacheManager.registerCache("allPosts", (InMemoryCacheService<?, ?>) allPostsCache);
+        
+        // Pre-populate cache with real database values
+        prepopulateCacheFromDatabase();
     }
     
     @Override
@@ -209,6 +221,34 @@ public class CachedPostService extends PostService {
     private void invalidateRelatedCaches(int userId) {
         allPostsCache.remove("all");
         userPostsCache.remove(userId);
+    }
+    
+    /**
+     * Pre-populates cache with real database values for better initial performance
+     */
+    private void prepopulateCacheFromDatabase() {
+        try {
+            // Load all posts from database and cache them
+            List<PostEntity> allPosts = super.findAll();
+            if (!allPosts.isEmpty()) {
+                allPostsCache.put("all", allPosts);
+                
+                // Cache individual posts and create user post mappings
+                for (PostEntity post : allPosts) {
+                    postCache.put(post.getPostId(), post);
+                    postByTitleCache.put(post.getTitle(), post);
+                    
+                    // Add to user posts cache
+                    List<PostEntity> existingUserPosts = userPostsCache.get(post.getUserId()).orElse(null);
+                    List<PostEntity> userPosts = existingUserPosts != null ? existingUserPosts : new java.util.ArrayList<>();
+                    userPosts.add(post);
+                    userPostsCache.put(post.getUserId(), userPosts);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Warning: Failed to pre-populate cache from database: " + e.getMessage());
+            // Continue without pre-population - cache will be populated on-demand
+        }
     }
     
     /**

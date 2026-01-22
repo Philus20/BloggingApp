@@ -2,11 +2,10 @@ package org.example.bloggingapp.Demo;
 
 import org.example.bloggingapp.Database.factories.ConnectionFactory;
 import org.example.bloggingapp.Database.factories.ServiceFactory;
-import org.example.bloggingapp.Database.Services.UserService;
+import org.example.bloggingapp.Services.UserService;
 import org.example.bloggingapp.Models.UserEntity;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
 /**

@@ -2,7 +2,7 @@ package org.example.bloggingapp.Demo;
 
 import org.example.bloggingapp.Models.UserEntity;
 import org.example.bloggingapp.Database.factories.ServiceFactory;
-import org.example.bloggingapp.Database.Services.UserService;
+import org.example.bloggingapp.Services.UserService;
 
 import java.util.List;
 

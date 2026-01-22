@@ -1,4 +1,4 @@
-package org.example.bloggingapp.Database.Services;
+package org.example.bloggingapp.Services;
 
 import org.example.bloggingapp.Database.DbInterfaces.ICrudQueries;
 

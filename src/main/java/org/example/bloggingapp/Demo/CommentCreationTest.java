@@ -1,7 +1,7 @@
 package org.example.bloggingapp.Demo;
 
 import org.example.bloggingapp.Database.Repositories.CommentRepository;
-import org.example.bloggingapp.Database.Services.CommentService;
+import org.example.bloggingapp.Services.CommentService;
 import org.example.bloggingapp.Models.CommentEntity;
 
 import java.time.LocalDateTime;

@@ -1,4 +1,6 @@
-package org.example.bloggingapp.Cache;
+package org.example.bloggingapp.Database.DbInterfaces;
+
+import org.example.bloggingapp.Cache.CacheStats;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;

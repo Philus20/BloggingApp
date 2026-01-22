@@ -1,17 +1,12 @@
 package org.example.bloggingapp;
 
 import org.example.bloggingapp.Database.DbInterfaces.IConnection;
-import org.example.bloggingapp.Database.DbInterfaces.IService;
-import org.example.bloggingapp.Database.Repositories.UserRepository;
-import org.example.bloggingapp.Database.Services.UserService;
 import org.example.bloggingapp.Database.factories.ConnectionFactory;
-import org.example.bloggingapp.Models.UserEntity;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.time.LocalDateTime;
 
 public class Main {
 
