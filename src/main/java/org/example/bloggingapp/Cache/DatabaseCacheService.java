@@ -1,11 +1,10 @@
 package org.example.bloggingapp.Cache;
 
 import org.example.bloggingapp.Database.DbInterfaces.CacheService;
-import org.example.bloggingapp.Database.DbInterfaces.IConnection;
 import org.example.bloggingapp.Database.factories.ConnectionFactory;
-import org.example.bloggingapp.Exceptions.DatabaseException;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -16,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 public class DatabaseCacheService<K, V> implements CacheService<K, V> {
     
     private final String tableName;
-    private final IConnection connection;
+    private final ConnectionFactory connection;
     private final long defaultExpirationMillis;
     private final CacheStats stats;
     
@@ -27,7 +26,7 @@ public class DatabaseCacheService<K, V> implements CacheService<K, V> {
     public DatabaseCacheService(String tableName, long defaultExpirationMillis) {
         this.tableName = tableName;
         this.defaultExpirationMillis = defaultExpirationMillis;
-        this.connection = ConnectionFactory.getInstance();
+        this.connection = new org.example.bloggingapp.Database.factories.ConnectionFactory();
         this.stats = new CacheStats();
         initializeCacheTable();
     }
@@ -36,7 +35,7 @@ public class DatabaseCacheService<K, V> implements CacheService<K, V> {
      * Creates the cache table if it doesn't exist
      */
     private void initializeCacheTable() {
-        try {
+        try (Connection conn = connection.createConnection()) {
             String createTableSQL = String.format("""
                 CREATE TABLE IF NOT EXISTS %s (
                     cache_key VARCHAR(255) PRIMARY KEY,
@@ -47,13 +46,18 @@ public class DatabaseCacheService<K, V> implements CacheService<K, V> {
                 )
                 """, tableName);
             
-            connection.executeUpdate(createTableSQL);
+            try (PreparedStatement stmt = conn.prepareStatement(createTableSQL)) {
+                stmt.executeUpdate();
+            }
             
             // Create index for expiration cleanup
             String createIndexSQL = String.format(
                 "CREATE INDEX IF NOT EXISTS idx_%s_expiration ON %s (expiration_time)",
                 tableName, tableName);
-            connection.executeUpdate(createIndexSQL);
+            
+            try (PreparedStatement stmt = conn.prepareStatement(createIndexSQL)) {
+                stmt.executeUpdate();
+            }
             
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize cache table: " + tableName, e);
@@ -62,11 +66,11 @@ public class DatabaseCacheService<K, V> implements CacheService<K, V> {
     
     @Override
     public Optional<V> get(K key) {
-        try {
+        try (Connection conn = connection.createConnection()) {
             String sql = String.format(
                 "SELECT cache_value, expiration_time FROM %s WHERE cache_key = ?", tableName);
             
-            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, key.toString());
                 
                 try (ResultSet rs = stmt.executeQuery()) {
@@ -98,7 +102,7 @@ public class DatabaseCacheService<K, V> implements CacheService<K, V> {
             
         } catch (Exception e) {
             stats.incrementMissCount();
-            throw new DatabaseException("CACHE_GET_ERROR", "Failed to get cache value for key: " + key, e);
+            throw new RuntimeException("Failed to get cache value for key: " + key, e);
         }
     }
     
@@ -109,7 +113,7 @@ public class DatabaseCacheService<K, V> implements CacheService<K, V> {
     
     @Override
     public void put(K key, V value, long timeout, TimeUnit timeUnit) {
-        try {
+        try (Connection conn = connection.createConnection()) {
             long expirationTime = timeout > 0 ? System.currentTimeMillis() + timeUnit.toMillis(timeout) : 0;
             String serializedValue = serializeValue(value);
             
@@ -118,7 +122,7 @@ public class DatabaseCacheService<K, V> implements CacheService<K, V> {
                 VALUES (?, ?, ?, CURRENT_TIMESTAMP)
                 """, tableName);
             
-            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, key.toString());
                 stmt.setString(2, serializedValue);
                 stmt.setLong(3, expirationTime);
@@ -128,16 +132,16 @@ public class DatabaseCacheService<K, V> implements CacheService<K, V> {
             stats.incrementPutCount();
             
         } catch (Exception e) {
-            throw new DatabaseException("CACHE_PUT_ERROR", "Failed to put cache value for key: " + key, e);
+            throw new RuntimeException("Failed to put cache value for key: " + key, e);
         }
     }
     
     @Override
     public boolean remove(K key) {
-        try {
+        try (Connection conn = connection.createConnection()) {
             String sql = String.format("DELETE FROM %s WHERE cache_key = ?", tableName);
             
-            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, key.toString());
                 int rowsAffected = stmt.executeUpdate();
                 
@@ -150,27 +154,30 @@ public class DatabaseCacheService<K, V> implements CacheService<K, V> {
             return false;
             
         } catch (Exception e) {
-            throw new DatabaseException("CACHE_REMOVE_ERROR", "Failed to remove cache value for key: " + key, e);
+            throw new RuntimeException("Failed to remove cache value for key: " + key, e);
         }
     }
     
     @Override
     public void clear() {
-        try {
+        try (Connection conn = connection.createConnection()) {
             String sql = String.format("DELETE FROM %s", tableName);
-            connection.executeUpdate(sql);
+            
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.executeUpdate();
+            }
             
         } catch (Exception e) {
-            throw new DatabaseException("CACHE_CLEAR_ERROR", "Failed to clear cache table: " + tableName, e);
+            throw new RuntimeException("Failed to clear cache table: " + tableName, e);
         }
     }
     
     @Override
     public int size() {
-        try {
+        try (Connection conn = connection.createConnection()) {
             String sql = String.format("SELECT COUNT(*) FROM %s", tableName);
             
-            try (PreparedStatement stmt = connection.prepareStatement(sql);
+            try (PreparedStatement stmt = conn.prepareStatement(sql);
                  ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1);
@@ -180,7 +187,7 @@ public class DatabaseCacheService<K, V> implements CacheService<K, V> {
             return 0;
             
         } catch (Exception e) {
-            throw new DatabaseException("CACHE_SIZE_ERROR", "Failed to get cache size for table: " + tableName, e);
+            throw new RuntimeException("Failed to get cache size for table: " + tableName, e);
         }
     }
     
@@ -191,12 +198,12 @@ public class DatabaseCacheService<K, V> implements CacheService<K, V> {
     
     @Override
     public boolean containsKey(K key) {
-        try {
+        try (Connection conn = connection.createConnection()) {
             String sql = String.format(
                 "SELECT COUNT(*) FROM %s WHERE cache_key = ? AND (expiration_time = 0 OR expiration_time > ?)",
                 tableName);
             
-            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, key.toString());
                 stmt.setLong(2, System.currentTimeMillis());
                 
@@ -230,11 +237,11 @@ public class DatabaseCacheService<K, V> implements CacheService<K, V> {
      * Updates the access time for a cache entry
      */
     private void updateAccessTime(K key) {
-        try {
+        try (Connection conn = connection.createConnection()) {
             String sql = String.format(
                 "UPDATE %s SET accessed_at = CURRENT_TIMESTAMP WHERE cache_key = ?", tableName);
             
-            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, key.toString());
                 stmt.executeUpdate();
             }
@@ -296,11 +303,11 @@ public class DatabaseCacheService<K, V> implements CacheService<K, V> {
      * Removes all expired entries from the cache
      */
     public int cleanupExpired() {
-        try {
+        try (Connection conn = connection.createConnection()) {
             String sql = String.format(
                 "DELETE FROM %s WHERE expiration_time > 0 AND expiration_time < ?", tableName);
             
-            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setLong(1, System.currentTimeMillis());
                 int removedCount = stmt.executeUpdate();
                 
@@ -309,7 +316,7 @@ public class DatabaseCacheService<K, V> implements CacheService<K, V> {
             }
             
         } catch (Exception e) {
-            throw new DatabaseException("CACHE_CLEANUP_ERROR", "Failed to cleanup expired cache entries", e);
+            throw new RuntimeException("Failed to cleanup expired cache entries", e);
         }
     }
     

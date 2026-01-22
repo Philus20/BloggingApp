@@ -10,10 +10,10 @@ import java.io.IOException;
 public class HelloApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-        // Launch Dashboard as default route
-        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("/org/example/bloggingapp/Screens/fxml/dashboard.fxml"));
+        // Launch User-Friendly Dashboard as default route
+        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("/org/example/bloggingapp/Dashboard/UserFriendlyDashboard.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 1200, 800);
-        stage.setTitle("📊 Blogging App - Dashboard");
+        stage.setTitle("� Caching Performance Dashboard - See the Magic!");
         stage.setScene(scene);
         stage.show();
     }

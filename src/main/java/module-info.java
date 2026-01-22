@@ -22,4 +22,5 @@ module org.example.bloggingapp {
     exports org.example.bloggingapp.Cache;
     exports org.example.bloggingapp.Database.DbInterfaces;
     opens org.example.bloggingapp.Database.DbInterfaces to javafx.fxml;
+    exports org.example.bloggingapp.controller;
 }
