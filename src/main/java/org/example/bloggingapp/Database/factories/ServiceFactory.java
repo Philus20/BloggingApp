@@ -4,10 +4,14 @@ import org.example.bloggingapp.Database.Repositories.CommentRepository;
 import org.example.bloggingapp.Database.Repositories.PostRepository;
 import org.example.bloggingapp.Database.Repositories.ReviewRepository;
 import org.example.bloggingapp.Database.Repositories.UserRepository;
+import org.example.bloggingapp.Database.Repositories.TagRepository;
+import org.example.bloggingapp.Database.Repositories.PostTagRepository;
 import org.example.bloggingapp.Database.Services.CommentService;
 import org.example.bloggingapp.Database.Services.PostService;
 import org.example.bloggingapp.Database.Services.ReviewService;
 import org.example.bloggingapp.Database.Services.UserService;
+import org.example.bloggingapp.Database.Services.TagService;
+import org.example.bloggingapp.Database.Services.PostTagService;
 
 /**
  * 🏭 Service Factory - Manages service instances following clean architecture
@@ -24,6 +28,8 @@ public class ServiceFactory {
     private CommentService commentService;
     private UserService userService;
     private ReviewService reviewService;
+    private TagService tagService;
+    private PostTagService postTagService;
     
     private ServiceFactory() {
         initializeServices();
@@ -49,12 +55,16 @@ public class ServiceFactory {
             CommentRepository commentRepository = new CommentRepository();
             UserRepository userRepository = new UserRepository();
             ReviewRepository reviewRepository = new ReviewRepository();
+            TagRepository tagRepository = new TagRepository();
+            PostTagRepository postTagRepository = new PostTagRepository();
             
             // Initialize services with repositories
             this.postService = new PostService(postRepository);
             this.commentService = new CommentService(commentRepository);
             this.userService = new UserService(userRepository);
             this.reviewService = new ReviewService(reviewRepository);
+            this.tagService = new TagService(tagRepository);
+            this.postTagService = new PostTagService(postTagRepository);
             
             System.out.println("✅ All services initialized successfully");
         } catch (Exception e) {
@@ -81,6 +91,14 @@ public class ServiceFactory {
         return reviewService;
     }
     
+    public TagService getTagService() {
+        return tagService;
+    }
+    
+    public PostTagService getPostTagService() {
+        return postTagService;
+    }
+    
     // ==================== UTILITY METHODS ====================
     
     /**
@@ -97,6 +115,8 @@ public class ServiceFactory {
         return postService != null && 
                commentService != null && 
                userService != null && 
-               reviewService != null;
+               reviewService != null &&
+               tagService != null &&
+               postTagService != null;
     }
 }

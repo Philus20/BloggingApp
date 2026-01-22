@@ -1,80 +1,34 @@
 package org.example.bloggingapp.Database.Services;
 
-import org.example.bloggingapp.Database.DbInterfaces.IService;
+import org.example.bloggingapp.Cache.CacheService;
+import org.example.bloggingapp.Cache.InMemoryCacheService;
 import org.example.bloggingapp.Database.Repositories.PostRepository;
 import org.example.bloggingapp.Models.PostEntity;
 import org.example.bloggingapp.Exceptions.DatabaseException;
 import org.example.bloggingapp.Exceptions.EntityNotFoundException;
 import org.example.bloggingapp.Exceptions.ServiceException;
 import org.example.bloggingapp.Exceptions.ValidationException;
-import org.example.bloggingapp.Cache.CacheService;
-import org.example.bloggingapp.Cache.InMemoryCacheService;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-public class PostService implements IService<PostEntity> {
+/**
+ * Cached version of PostService that provides fast loading through in-memory caching
+ */
+public class CachedPostService extends PostService {
     
-    private final PostRepository postRepository;
-    private PostSearchService searchService;
-    
-    // Cache instances for performance optimization
     private final CacheService<Integer, PostEntity> postCache;
     private final CacheService<String, PostEntity> postByTitleCache;
     private final CacheService<Integer, List<PostEntity>> userPostsCache;
     private final CacheService<String, List<PostEntity>> allPostsCache;
     
-    public PostService(PostRepository postRepository) {
-        this.postRepository = postRepository;
+    public CachedPostService(PostRepository postRepository) {
+        super(postRepository);
         // Initialize caches with different configurations for different use cases
         this.postCache = new InMemoryCacheService<>(500, 10 * 60 * 1000); // 500 posts, 10 minutes
         this.postByTitleCache = new InMemoryCacheService<>(200, 15 * 60 * 1000); // 200 titles, 15 minutes
         this.userPostsCache = new InMemoryCacheService<>(100, 5 * 60 * 1000); // 100 users, 5 minutes
         this.allPostsCache = new InMemoryCacheService<>(10, 2 * 60 * 1000); // 10 lists, 2 minutes
-    }
-    
-    public void setSearchService(PostSearchService searchService) {
-        this.searchService = searchService;
-    }
-    
-    @Override
-    public PostEntity create(PostEntity post) throws DatabaseException, ServiceException, ValidationException {
-        try {
-            if (post == null) {
-                throw new ValidationException("POST_NULL", "post", "Post entity cannot be null");
-            }
-            if (post.getTitle() == null || post.getTitle().trim().isEmpty()) {
-                throw new ValidationException("TITLE_REQUIRED", "title", "Post title is required");
-            }
-            if (post.getContent() == null || post.getContent().trim().isEmpty()) {
-                throw new ValidationException("CONTENT_REQUIRED", "content", "Post content is required");
-            }
-            
-            if (post.getCreatedAt() == null) {
-                post.setCreatedAt(LocalDateTime.now());
-            }
-            
-            postRepository.create(post);
-            
-            // Cache the newly created post
-            postCache.put(post.getPostId(), post);
-            postByTitleCache.put(post.getTitle(), post);
-            
-            // Invalidate related caches
-            invalidateRelatedCaches(post.getUserId());
-            
-            // Invalidate search service cache
-            if (searchService != null) {
-                searchService.invalidateCache();
-            }
-            
-            return post;
-        } catch (ValidationException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new DatabaseException("POST_CREATE_ERROR", "Failed to create post", e);
-        }
     }
     
     @Override
@@ -91,10 +45,7 @@ public class PostService implements IService<PostEntity> {
             }
             
             // Cache miss - fetch from database
-            PostEntity post = postRepository.findByInteger(id);
-            if (post == null) {
-                throw new EntityNotFoundException("Post", id);
-            }
+            PostEntity post = super.findById(id);
             
             // Cache the result
             postCache.put(id, post);
@@ -121,7 +72,7 @@ public class PostService implements IService<PostEntity> {
             }
             
             // Cache miss - fetch from database
-            PostEntity post = postRepository.findByString(identifier);
+            PostEntity post = super.findByString(identifier);
             
             if (post != null) {
                 // Cache the result
@@ -148,7 +99,7 @@ public class PostService implements IService<PostEntity> {
             }
             
             // Cache miss - fetch from database
-            List<PostEntity> posts = postRepository.findAll();
+            List<PostEntity> posts = super.findAll();
             
             // Cache the result
             allPostsCache.put("all", posts);
@@ -160,73 +111,66 @@ public class PostService implements IService<PostEntity> {
     }
     
     @Override
+    public PostEntity create(PostEntity post) throws DatabaseException, ServiceException, ValidationException {
+        try {
+            PostEntity createdPost = super.create(post);
+            
+            // Cache the newly created post
+            postCache.put(createdPost.getPostId(), createdPost);
+            postByTitleCache.put(createdPost.getTitle(), createdPost);
+            
+            // Invalidate related caches
+            invalidateRelatedCaches(createdPost.getUserId());
+            
+            return createdPost;
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+    
+    @Override
     public PostEntity update(int id, PostEntity post) throws DatabaseException, EntityNotFoundException, ValidationException {
         try {
-            if (post == null) {
-                throw new ValidationException("POST_NULL", "post", "Post entity cannot be null");
-            }
+            PostEntity updatedPost = super.update(id, post);
             
-            PostEntity existingPost = findById(id);
-            if (existingPost != null) {
-                post.setPostId(id);
-                postRepository.updateById(id);
-                
+            if (updatedPost != null) {
                 // Update cache
-                postCache.put(id, post);
-                postByTitleCache.put(post.getTitle(), post);
+                postCache.put(id, updatedPost);
+                postByTitleCache.put(updatedPost.getTitle(), updatedPost);
                 
                 // Invalidate related caches
-                invalidateRelatedCaches(post.getUserId());
-                
-                // Invalidate search service cache
-                if (searchService != null) {
-                    searchService.invalidateCache();
-                }
-                
-                return post;
+                invalidateRelatedCaches(updatedPost.getUserId());
             }
-            return null;
-        } catch (ValidationException | EntityNotFoundException | DatabaseException e) {
-            throw e;
+            
+            return updatedPost;
         } catch (Exception e) {
-            throw new DatabaseException("POST_UPDATE_ERROR", "Failed to update post: " + id, e);
+            throw e;
         }
     }
     
     @Override
     public boolean delete(int id) throws DatabaseException, EntityNotFoundException, ValidationException {
         try {
-            if (id <= 0) {
-                throw new ValidationException("INVALID_ID", "id", "Post ID must be positive");
-            }
-            
             // Get post before deletion to invalidate caches
             PostEntity postToDelete = findById(id);
-            if (postToDelete != null) {
-                postRepository.delete(id);
-                
+            boolean deleted = super.delete(id);
+            
+            if (deleted) {
                 // Remove from caches
                 postCache.remove(id);
                 postByTitleCache.remove(postToDelete.getTitle());
                 
                 // Invalidate related caches
                 invalidateRelatedCaches(postToDelete.getUserId());
-                
-                // Invalidate search service cache
-                if (searchService != null) {
-                    searchService.invalidateCache();
-                }
-                
-                return true;
             }
-            return false;
-        } catch (ValidationException | EntityNotFoundException | DatabaseException e) {
-            throw e;
+            
+            return deleted;
         } catch (Exception e) {
-            throw new DatabaseException("POST_DELETE_ERROR", "Failed to delete post: " + id, e);
+            throw e;
         }
     }
     
+    @Override
     public List<PostEntity> findByUserId(int userId) throws DatabaseException, ValidationException {
         try {
             if (userId <= 0) {
@@ -240,9 +184,7 @@ public class PostService implements IService<PostEntity> {
             }
             
             // Cache miss - fetch from database
-            List<PostEntity> posts = findAll().stream()
-                    .filter(post -> post.getUserId() == userId)
-                    .toList();
+            List<PostEntity> posts = super.findByUserId(userId);
             
             // Cache the result
             userPostsCache.put(userId, posts);
@@ -255,6 +197,7 @@ public class PostService implements IService<PostEntity> {
         }
     }
     
+    @Override
     public PostEntity findByTitle(String title) throws DatabaseException, ValidationException {
         return findByString(title); // Reuse the cached findByString method
     }

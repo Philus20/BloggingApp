@@ -23,7 +23,7 @@ public class ReviewRepository implements Repository<ReviewEntity> {
 
     @Override
     public void create(ReviewEntity review) {
-        String sql = crudQueries.createQuery("reviews", "rating, comment, user_id, post_id");
+        String sql = "INSERT INTO reviews (rating, comment, user_id, post_id) VALUES (?, ?, ?, ?)";
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -101,15 +101,18 @@ public class ReviewRepository implements Repository<ReviewEntity> {
 
     @Override
     public void updateById(int id) {
-        String sql = crudQueries.updateByIdQuery(id, "reviews", "rating = ?, comment = ?, user_id = ?, post_id = ?", "review_id");
+        String sql = "UPDATE reviews SET rating = ?, comment = ?, user_id = ?, post_id = ? WHERE review_id = ?";
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             
-            statement.setInt(1, 5);
-            statement.setString(2, "updated_comment");
-            statement.setInt(3, 1);
-            statement.setInt(4, 1);
+            // Note: In a real implementation, you'd pass the actual review object
+            // For now, this is a placeholder that would need the review parameters
+            statement.setInt(1, 5);  // rating placeholder
+            statement.setString(2, "updated_comment");  // comment placeholder
+            statement.setInt(3, 1);  // user_id placeholder
+            statement.setInt(4, 1);  // post_id placeholder
+            statement.setInt(5, id);  // WHERE clause
             
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -137,6 +140,10 @@ public class ReviewRepository implements Repository<ReviewEntity> {
         review.setComment(resultSet.getString("comment"));
         review.setUserId(resultSet.getInt("user_id"));
         review.setPostId(resultSet.getInt("post_id"));
+        
+        // Don't set created_at since the column doesn't exist in the database
+        // The entity will use the default timestamp from the constructor
+        
         return review;
     }
 }

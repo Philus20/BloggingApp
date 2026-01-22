@@ -10,11 +10,15 @@ import org.example.bloggingapp.Models.PostEntity;
 import org.example.bloggingapp.Models.CommentEntity;
 import org.example.bloggingapp.Models.UserEntity;
 import org.example.bloggingapp.Models.ReviewEntity;
+import org.example.bloggingapp.Models.TagEntity;
+import org.example.bloggingapp.Models.PostTagEntity;
 import org.example.bloggingapp.Database.factories.ServiceFactory;
 import org.example.bloggingapp.Database.Services.PostService;
 import org.example.bloggingapp.Database.Services.CommentService;
 import org.example.bloggingapp.Database.Services.UserService;
 import org.example.bloggingapp.Database.Services.ReviewService;
+import org.example.bloggingapp.Database.Services.TagService;
+import org.example.bloggingapp.Database.Services.PostTagService;
 import org.example.bloggingapp.Database.Utils.RegexPatterns;
 
 import java.time.LocalDateTime;
@@ -70,6 +74,8 @@ public class MainFeedController {
     private CommentService commentService;
     private UserService userService;
     private ReviewService reviewService;
+    private TagService tagService;
+    private PostTagService postTagService;
     
     // ==================== DATA LAYER ===================
     
@@ -117,6 +123,8 @@ public class MainFeedController {
             this.commentService = serviceFactory.getCommentService();
             this.userService = serviceFactory.getUserService();
             this.reviewService = serviceFactory.getReviewService();
+            this.tagService = serviceFactory.getTagService();
+            this.postTagService = serviceFactory.getPostTagService();
             
             // Initialize data structures
             allPosts = new ArrayList<>();
@@ -268,6 +276,10 @@ public class MainFeedController {
             // Save post to database using service layer
             PostEntity createdPost = postService.create(newPost);
             
+            // Extract and save hashtags
+            List<String> extractedTags = extractAndSaveTags(content, createdPost.getPostId());
+            System.out.println("🏷️ Extracted and saved " + extractedTags.size() + " tags: " + extractedTags);
+            
             // Add to local list
             allPosts.add(0, createdPost);
             
@@ -291,7 +303,7 @@ public class MainFeedController {
     /**
      * 🏷️ Extract hashtags from content and save via service
      */
-    private List<String> extractAndSaveTags(String content) {
+    private List<String> extractAndSaveTags(String content, int postId) {
         List<String> hashtags = new ArrayList<>();
         
         // Find all #hashtags
@@ -302,8 +314,33 @@ public class MainFeedController {
                 if (!hashtags.contains(hashtag)) {
                     hashtags.add(hashtag);
                     
-                    // In real implementation: tagService.createTag(hashtag);
-                    // In real implementation: postTagService.linkPostToTag(postId, tagId);
+                    try {
+                        // Create or find the tag
+                        TagEntity existingTag = tagService.findByName(hashtag);
+                        TagEntity tag;
+                        
+                        if (existingTag == null) {
+                            // Create new tag
+                            tag = new TagEntity();
+                            tag.setName(hashtag);
+                            tag = tagService.create(tag);
+                            System.out.println("🏷️ Created new tag: " + hashtag + " with ID: " + tag.getTagId());
+                        } else {
+                            tag = existingTag;
+                            System.out.println("🏷️ Using existing tag: " + hashtag + " with ID: " + tag.getTagId());
+                        }
+                        
+                        // Link post to tag
+                        PostTagEntity postTag = new PostTagEntity();
+                        postTag.setPostId(postId);
+                        postTag.setTagId(tag.getTagId());
+                        postTagService.create(postTag);
+                        System.out.println("🔗 Linked post " + postId + " to tag " + hashtag);
+                        
+                    } catch (Exception e) {
+                        System.err.println("❌ Error saving tag " + hashtag + ": " + e.getMessage());
+                        // Continue with other tags even if one fails
+                    }
                 }
             }
         }
@@ -399,17 +436,17 @@ public class MainFeedController {
         }
         
         try {
-            // Create new review
-            ReviewEntity newReview = new ReviewEntity(
-                generateReviewId(),
-                selectedRating,
-                reviewText,
-                1, // Current user ID
-                currentPostForReview.getPostId()
-            );
+            // Create new review entity
+            ReviewEntity newReview = new ReviewEntity();
+            newReview.setRating(selectedRating);
+            newReview.setComment(reviewText);
+            newReview.setUserId(currentUserId);
+            newReview.setPostId(currentPostForReview.getPostId());
+            newReview.setCreatedAt(LocalDateTime.now());
             
-            // In real implementation: reviewService.addReview(newReview);
-            System.out.println("⭐ Added " + selectedRating + "-star review to post " + currentPostForReview.getPostId());
+            // Save review to database using service layer
+            ReviewEntity createdReview = reviewService.create(newReview);
+            System.out.println("⭐ Added " + selectedRating + "-star review to post " + currentPostForReview.getPostId() + " with review ID: " + createdReview.getReviewId());
             
             // Reset form
             reviewCommentField.clear();
@@ -421,6 +458,7 @@ public class MainFeedController {
             
         } catch (Exception e) {
             System.err.println("❌ Error submitting review: " + e.getMessage());
+            e.printStackTrace();
             showAlert("Error", "Failed to submit review. Please try again.");
         }
     }
@@ -465,9 +503,40 @@ public class MainFeedController {
         timeLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #666666;");
         
         // Post content
-        Label contentLabel = new Label(post.getContent());
-        contentLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333; -fx-wrap-text: true;");
-        contentLabel.setPrefWidth(400);
+        VBox contentBox = new VBox(5);
+        contentBox.setPrefWidth(400);
+        
+        // Parse content and make hashtags clickable
+        String[] contentParts = post.getContent().split("(?=#)");
+        for (String part : contentParts) {
+            if (part.startsWith("#")) {
+                // Extract hashtag
+                String[] hashtagParts = part.split("\\s+", 2);
+                String hashtag = hashtagParts[0].substring(1); // Remove #
+                String remainingText = hashtagParts.length > 1 ? hashtagParts[1] : "";
+                
+                // Create clickable hashtag
+                HBox hashtagBox = new HBox(2);
+                Label hashtagLabel = new Label("#" + hashtag);
+                hashtagLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #1d9bf0; -fx-cursor: hand;");
+                hashtagLabel.setOnMouseClicked(e -> searchByHashtag(hashtag));
+                
+                hashtagBox.getChildren().add(hashtagLabel);
+                if (!remainingText.isEmpty()) {
+                    Label remainingLabel = new Label(remainingText);
+                    remainingLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333; -fx-wrap-text: true;");
+                    hashtagBox.getChildren().add(remainingLabel);
+                }
+                
+                contentBox.getChildren().add(hashtagBox);
+            } else {
+                // Regular text
+                Label textLabel = new Label(part);
+                textLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333333; -fx-wrap-text: true;");
+                textLabel.setPrefWidth(400);
+                contentBox.getChildren().add(textLabel);
+            }
+        }
         
         // Post actions
         HBox actionsBox = new HBox(10);
@@ -496,8 +565,17 @@ public class MainFeedController {
         // Store reference to comments section for toggling
         commentUIComponents.put(post.getPostId(), inlineCommentsSection);
         
-        card.getChildren().addAll(authorLabel, timeLabel, contentLabel, actionsBox, inlineCommentsSection);
+        card.getChildren().addAll(authorLabel, timeLabel, contentBox, actionsBox, inlineCommentsSection);
         return card;
+    }
+    
+    /**
+     * 🔍 Search posts by hashtag
+     */
+    private void searchByHashtag(String hashtag) {
+        System.out.println("🔍 Searching for hashtag: #" + hashtag);
+        searchField.setText("#" + hashtag);
+        searchPosts("#" + hashtag);
     }
     
     private void showCommentSection(PostEntity post) {

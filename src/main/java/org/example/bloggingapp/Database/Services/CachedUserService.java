@@ -1,6 +1,7 @@
 package org.example.bloggingapp.Database.Services;
 
-import org.example.bloggingapp.Database.DbInterfaces.IService;
+import org.example.bloggingapp.Cache.CacheService;
+import org.example.bloggingapp.Cache.InMemoryCacheService;
 import org.example.bloggingapp.Database.DbInterfaces.Repository;
 import org.example.bloggingapp.Database.Repositories.UserRepository;
 import org.example.bloggingapp.Models.UserEntity;
@@ -8,24 +9,23 @@ import org.example.bloggingapp.Exceptions.DatabaseException;
 import org.example.bloggingapp.Exceptions.EntityNotFoundException;
 import org.example.bloggingapp.Exceptions.ServiceException;
 import org.example.bloggingapp.Exceptions.ValidationException;
-import org.example.bloggingapp.Cache.CacheService;
-import org.example.bloggingapp.Cache.InMemoryCacheService;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-public class UserService implements IService<UserEntity> {
+/**
+ * Cached version of UserService that provides fast loading through in-memory caching
+ */
+public class CachedUserService implements org.example.bloggingapp.Database.DbInterfaces.IService<UserEntity> {
     
     private final Repository<UserEntity> userRepository;
-    
-    // Cache instances for performance optimization
     private final CacheService<Integer, UserEntity> userCache;
     private final CacheService<String, UserEntity> userByEmailCache;
     private final CacheService<String, UserEntity> userByUsernameCache;
     private final CacheService<String, List<UserEntity>> allUsersCache;
     
-    public UserService(Repository<UserEntity> userRepository) {
+    public CachedUserService() {
         this.userRepository = new UserRepository();
         // Initialize caches with different configurations for different use cases
         this.userCache = new InMemoryCacheService<>(1000, 15 * 60 * 1000); // 1000 users, 15 minutes
@@ -114,7 +114,24 @@ public class UserService implements IService<UserEntity> {
             if (identifier == null || identifier.trim().isEmpty()) {
                 throw new ValidationException("IDENTIFIER_REQUIRED", "identifier", "Identifier cannot be null or empty");
             }
-            return userRepository.findByString(identifier);
+            
+            // Try cache first
+            Optional<UserEntity> cachedUser = userByEmailCache.get(identifier);
+            if (cachedUser.isPresent()) {
+                return cachedUser.get();
+            }
+            
+            // Cache miss - fetch from database
+            UserEntity user = userRepository.findByString(identifier);
+            
+            if (user != null) {
+                // Cache the result
+                userCache.put(user.getUserId(), user);
+                userByEmailCache.put(user.getEmail(), user);
+                userByUsernameCache.put(user.getUserName(), user);
+            }
+            
+            return user;
         } catch (ValidationException e) {
             throw e;
         } catch (Exception e) {
@@ -183,26 +200,25 @@ public class UserService implements IService<UserEntity> {
             
             // Get user before deletion to invalidate caches
             UserEntity userToDelete = findById(id);
-            if (userToDelete != null) {
-                userRepository.delete(id);
-                
-                // Remove from caches
-                userCache.remove(id);
-                userByEmailCache.remove(userToDelete.getEmail());
-                userByUsernameCache.remove(userToDelete.getUserName());
-                
-                // Invalidate all users cache
-                allUsersCache.remove("all");
-                
-                return true;
-            }
-            return false;
+            userRepository.delete(id);
+            
+            // Remove from caches
+            userCache.remove(id);
+            userByEmailCache.remove(userToDelete.getEmail());
+            userByUsernameCache.remove(userToDelete.getUserName());
+            
+            // Invalidate all users cache
+            allUsersCache.remove("all");
+            
+            return true;
         } catch (ValidationException | EntityNotFoundException | DatabaseException e) {
             throw e;
         } catch (Exception e) {
             throw new DatabaseException("USER_DELETE_ERROR", "Failed to delete user: " + id, e);
         }
     }
+    
+    // ==================== BUSINESS METHODS ===================
     
     /**
      * Find user by email (cached version)
