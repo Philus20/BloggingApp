@@ -1,10 +1,10 @@
 package org.example.bloggingapp.Services;
 
 import org.example.bloggingapp.Models.UserEntity;
-import org.example.bloggingapp.Database.Utils.RegexPatterns;
-import org.example.bloggingapp.Exceptions.AuthenticationException;
-import org.example.bloggingapp.Exceptions.DatabaseException;
-import org.example.bloggingapp.Exceptions.ValidationException;
+import org.example.bloggingapp.Utils.RegexPatterns;
+import org.example.bloggingapp.Utils.Exceptions.AuthenticationException;
+import org.example.bloggingapp.Utils.Exceptions.DatabaseException;
+import org.example.bloggingapp.Utils.Exceptions.ValidationException;
 
 import java.time.LocalDateTime;
 import java.security.MessageDigest;

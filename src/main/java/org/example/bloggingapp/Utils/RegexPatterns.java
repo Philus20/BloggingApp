@@ -1,4 +1,4 @@
-package org.example.bloggingapp.Database.Utils;
+package org.example.bloggingapp.Utils;
 
 import java.util.regex.Pattern;
 

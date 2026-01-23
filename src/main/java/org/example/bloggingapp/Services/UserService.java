@@ -4,10 +4,10 @@ import org.example.bloggingapp.Database.DbInterfaces.IService;
 import org.example.bloggingapp.Database.DbInterfaces.Repository;
 import org.example.bloggingapp.Database.Repositories.UserRepository;
 import org.example.bloggingapp.Models.UserEntity;
-import org.example.bloggingapp.Exceptions.DatabaseException;
-import org.example.bloggingapp.Exceptions.EntityNotFoundException;
-import org.example.bloggingapp.Exceptions.ServiceException;
-import org.example.bloggingapp.Exceptions.ValidationException;
+import org.example.bloggingapp.Utils.Exceptions.DatabaseException;
+import org.example.bloggingapp.Utils.Exceptions.EntityNotFoundException;
+import org.example.bloggingapp.Utils.Exceptions.ServiceException;
+import org.example.bloggingapp.Utils.Exceptions.ValidationException;
 import org.example.bloggingapp.Database.DbInterfaces.CacheService;
 import org.example.bloggingapp.Cache.InMemoryCacheService;
 

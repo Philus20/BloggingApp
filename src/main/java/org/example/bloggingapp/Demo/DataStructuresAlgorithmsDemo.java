@@ -4,7 +4,7 @@ import org.example.bloggingapp.Database.Repositories.PostRepository;
 import org.example.bloggingapp.Services.PostService;
 import org.example.bloggingapp.Services.AdvancedSearchService;
 import org.example.bloggingapp.Models.PostEntity;
-import org.example.bloggingapp.Exceptions.DatabaseException;
+import org.example.bloggingapp.Utils.Exceptions.DatabaseException;
 
 import java.time.LocalDateTime;
 import java.util.*;

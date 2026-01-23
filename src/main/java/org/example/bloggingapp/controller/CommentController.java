@@ -19,7 +19,7 @@ import org.example.bloggingapp.Models.CommentEntity;
 import org.example.bloggingapp.Database.factories.ServiceFactory;
 import org.example.bloggingapp.Services.CommentService;
 import org.example.bloggingapp.Services.UserService;
-import org.example.bloggingapp.Database.Utils.RegexPatterns;
+import org.example.bloggingapp.Utils.RegexPatterns;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

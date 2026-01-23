@@ -4,7 +4,7 @@ import org.example.bloggingapp.Models.UserEntity;
 import org.example.bloggingapp.Database.factories.ServiceFactory;
 import org.example.bloggingapp.Services.UserService;
 import org.example.bloggingapp.Services.AuthenticationService;
-import org.example.bloggingapp.Exceptions.DatabaseException;
+import org.example.bloggingapp.Utils.Exceptions.DatabaseException;
 
 import java.util.List;
 

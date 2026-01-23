@@ -19,7 +19,7 @@ import org.example.bloggingapp.Services.UserService;
 import org.example.bloggingapp.Services.ReviewService;
 import org.example.bloggingapp.Services.TagService;
 import org.example.bloggingapp.Services.PostTagService;
-import org.example.bloggingapp.Database.Utils.RegexPatterns;
+import org.example.bloggingapp.Utils.RegexPatterns;
 
 import java.time.LocalDateTime;
 import java.util.List;

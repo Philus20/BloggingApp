@@ -1,4 +1,4 @@
-package org.example.bloggingapp.Database.Repositories;
+package Repositories;
 
 class ReviewRepositoryTest {
 

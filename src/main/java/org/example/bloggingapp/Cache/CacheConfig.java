@@ -1,173 +1,127 @@
 package org.example.bloggingapp.Cache;
 
-import java.util.concurrent.TimeUnit;
-
 /**
- * Configuration class for cache settings
+ * Configuration class for cache instances
+ * Contains settings for cache size, expiration, and other parameters
  */
 public class CacheConfig {
     
     private final int maxSize;
-    private final long expirationTime;
-    private final TimeUnit timeUnit;
-    private final boolean enableStatistics;
-    private final boolean enableCleanup;
-    private final long cleanupInterval;
-    
-    private CacheConfig(Builder builder) {
-        this.maxSize = builder.maxSize;
-        this.expirationTime = builder.expirationTime;
-        this.timeUnit = builder.timeUnit;
-        this.enableStatistics = builder.enableStatistics;
-        this.enableCleanup = builder.enableCleanup;
-        this.cleanupInterval = builder.cleanupInterval;
-    }
+    private final long expirationMillis;
+    private final boolean enableStats;
+    private final String name;
     
     /**
-     * Creates a new builder for CacheConfig
-     * @return new Builder instance
+     * Default constructor with sensible defaults
      */
-    public static Builder builder() {
-        return new Builder();
+    public CacheConfig() {
+        this(1000, 300000, true, "default"); // 1000 items, 5 minutes, stats enabled
     }
     
     /**
-     * Creates a default configuration
-     * @return default CacheConfig with 1000 max size and 5 minutes expiration
+     * Constructor with custom size and expiration
+     * @param maxSize maximum number of items in cache
+     * @param expirationMillis expiration time in milliseconds
      */
-    public static CacheConfig defaultConfig() {
-        return builder().build();
+    public CacheConfig(int maxSize, long expirationMillis) {
+        this(maxSize, expirationMillis, true, "custom");
     }
     
-    // Getters
-    public int getMaxSize() { return maxSize; }
-    public long getExpirationTime() { return expirationTime; }
-    public TimeUnit getTimeUnit() { return timeUnit; }
-    public boolean isStatisticsEnabled() { return enableStatistics; }
-    public boolean isCleanupEnabled() { return enableCleanup; }
-    public long getCleanupInterval() { return cleanupInterval; }
+    /**
+     * Full constructor with all parameters
+     * @param maxSize maximum number of items in cache
+     * @param expirationMillis expiration time in milliseconds
+     * @param enableStats whether to enable statistics collection
+     * @param name cache name/identifier
+     */
+    public CacheConfig(int maxSize, long expirationMillis, boolean enableStats, String name) {
+        this.maxSize = maxSize;
+        this.expirationMillis = expirationMillis;
+        this.enableStats = enableStats;
+        this.name = name;
+    }
     
     /**
-     * Returns expiration time in milliseconds
-     * @return expiration time in milliseconds
+     * Gets the maximum cache size
+     * @return maximum number of items
+     */
+    public int getMaxSize() {
+        return maxSize;
+    }
+    
+    /**
+     * Gets the expiration time in milliseconds
+     * @return expiration time
      */
     public long getExpirationMillis() {
-        return timeUnit.toMillis(expirationTime);
+        return expirationMillis;
+    }
+    
+    /**
+     * Checks if statistics are enabled
+     * @return true if stats enabled, false otherwise
+     */
+    public boolean isEnableStats() {
+        return enableStats;
+    }
+    
+    /**
+     * Gets the cache name
+     * @return cache name
+     */
+    public String getName() {
+        return name;
+    }
+    
+    /**
+     * Creates a builder for CacheConfig
+     * @return new CacheConfigBuilder instance
+     */
+    public static CacheConfigBuilder builder() {
+        return new CacheConfigBuilder();
     }
     
     /**
      * Builder class for CacheConfig
      */
-    public static class Builder {
+    public static class CacheConfigBuilder {
         private int maxSize = 1000;
-        private long expirationTime = 5;
-        private TimeUnit timeUnit = TimeUnit.MINUTES;
-        private boolean enableStatistics = true;
-        private boolean enableCleanup = true;
-        private long cleanupInterval = 1; // in minutes
+        private long expirationMillis = 300000; // 5 minutes
+        private boolean enableStats = true;
+        private String name = "default";
         
-        /**
-         * Sets maximum cache size
-         * @param maxSize maximum number of entries
-         * @return Builder instance
-         */
-        public Builder maxSize(int maxSize) {
-            if (maxSize <= 0) {
-                throw new IllegalArgumentException("Max size must be positive");
-            }
+        public CacheConfigBuilder maxSize(int maxSize) {
             this.maxSize = maxSize;
             return this;
         }
         
-        /**
-         * Sets expiration time
-         * @param expirationTime expiration time value
-         * @param timeUnit time unit for expiration
-         * @return Builder instance
-         */
-        public Builder expiration(long expirationTime, TimeUnit timeUnit) {
-            if (expirationTime < 0) {
-                throw new IllegalArgumentException("Expiration time cannot be negative");
-            }
-            this.expirationTime = expirationTime;
-            this.timeUnit = timeUnit;
+        public CacheConfigBuilder expiration(long expirationMillis) {
+            this.expirationMillis = expirationMillis;
             return this;
         }
         
-        /**
-         * Sets expiration time in minutes
-         * @param minutes expiration time in minutes
-         * @return Builder instance
-         */
-        public Builder expirationMinutes(long minutes) {
-            return expiration(minutes, TimeUnit.MINUTES);
-        }
-        
-        /**
-         * Sets expiration time in seconds
-         * @param seconds expiration time in seconds
-         * @return Builder instance
-         */
-        public Builder expirationSeconds(long seconds) {
-            return expiration(seconds, TimeUnit.SECONDS);
-        }
-        
-        /**
-         * Sets expiration time in hours
-         * @param hours expiration time in hours
-         * @return Builder instance
-         */
-        public Builder expirationHours(long hours) {
-            return expiration(hours, TimeUnit.HOURS);
-        }
-        
-        /**
-         * Enables or disables statistics collection
-         * @param enableStatistics true to enable statistics
-         * @return Builder instance
-         */
-        public Builder enableStatistics(boolean enableStatistics) {
-            this.enableStatistics = enableStatistics;
+        public CacheConfigBuilder enableStats(boolean enableStats) {
+            this.enableStats = enableStats;
             return this;
         }
         
-        /**
-         * Enables or disables automatic cleanup of expired entries
-         * @param enableCleanup true to enable cleanup
-         * @return Builder instance
-         */
-        public Builder enableCleanup(boolean enableCleanup) {
-            this.enableCleanup = enableCleanup;
+        public CacheConfigBuilder name(String name) {
+            this.name = name;
             return this;
         }
         
-        /**
-         * Sets cleanup interval in minutes
-         * @param cleanupInterval cleanup interval in minutes
-         * @return Builder instance
-         */
-        public Builder cleanupInterval(long cleanupInterval) {
-            if (cleanupInterval <= 0) {
-                throw new IllegalArgumentException("Cleanup interval must be positive");
-            }
-            this.cleanupInterval = cleanupInterval;
-            return this;
-        }
-        
-        /**
-         * Builds the CacheConfig instance
-         * @return CacheConfig instance
-         */
         public CacheConfig build() {
-            return new CacheConfig(this);
+            return new CacheConfig(maxSize, expirationMillis, enableStats, name);
         }
     }
     
     @Override
     public String toString() {
-        return String.format(
-            "CacheConfig{maxSize=%d, expiration=%d %s, statistics=%s, cleanup=%s, cleanupInterval=%d minutes}",
-            maxSize, expirationTime, timeUnit, enableStatistics, enableCleanup, cleanupInterval
-        );
+        return "CacheConfig{" +
+                "maxSize=" + maxSize +
+                ", expirationMillis=" + expirationMillis +
+                ", enableStats=" + enableStats +
+                ", name='" + name + '\'' +
+                '}';
     }
 }

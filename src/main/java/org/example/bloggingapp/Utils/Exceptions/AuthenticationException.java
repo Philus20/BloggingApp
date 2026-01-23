@@ -1,4 +1,4 @@
-package org.example.bloggingapp.Exceptions;
+package org.example.bloggingapp.Utils.Exceptions;
 
 /**
  * Exception for authentication-related errors

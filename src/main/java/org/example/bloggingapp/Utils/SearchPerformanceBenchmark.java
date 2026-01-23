@@ -1,10 +1,10 @@
-package org.example.bloggingapp.Database.Utils;
+package org.example.bloggingapp.Utils;
 
 import org.example.bloggingapp.Services.PostSearchService;
 import org.example.bloggingapp.Services.PostService;
 import org.example.bloggingapp.Models.PostEntity;
-import org.example.bloggingapp.Exceptions.DatabaseException;
-import org.example.bloggingapp.Exceptions.ValidationException;
+import org.example.bloggingapp.Utils.Exceptions.DatabaseException;
+import org.example.bloggingapp.Utils.Exceptions.ValidationException;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;

@@ -1,8 +1,8 @@
 package org.example.bloggingapp.Services;
 
 import org.example.bloggingapp.Models.PostEntity;
-import org.example.bloggingapp.Exceptions.DatabaseException;
-import org.example.bloggingapp.Exceptions.ValidationException;
+import org.example.bloggingapp.Utils.Exceptions.DatabaseException;
+import org.example.bloggingapp.Utils.Exceptions.ValidationException;
 
 import java.time.LocalDateTime;
 import java.util.*;

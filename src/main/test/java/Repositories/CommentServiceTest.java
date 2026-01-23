@@ -1,4 +1,4 @@
-package org.example.bloggingapp.Database.Repositories;
+package Repositories;
 
 import org.example.bloggingapp.Services.CommentService;
 import org.example.bloggingapp.Models.CommentEntity;

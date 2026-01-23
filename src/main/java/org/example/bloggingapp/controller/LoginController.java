@@ -12,10 +12,10 @@ import org.example.bloggingapp.Models.UserEntity;
 import org.example.bloggingapp.Database.factories.ServiceFactory;
 import org.example.bloggingapp.Services.UserService;
 import org.example.bloggingapp.Services.AuthenticationService;
-import org.example.bloggingapp.Database.Utils.RegexPatterns;
-import org.example.bloggingapp.Exceptions.AuthenticationException;
-import org.example.bloggingapp.Exceptions.ValidationException;
-import org.example.bloggingapp.Exceptions.DatabaseException;
+import org.example.bloggingapp.Utils.RegexPatterns;
+import org.example.bloggingapp.Utils.Exceptions.AuthenticationException;
+import org.example.bloggingapp.Utils.Exceptions.ValidationException;
+import org.example.bloggingapp.Utils.Exceptions.DatabaseException;
 
 import java.io.IOException;
 

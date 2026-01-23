@@ -1,7 +1,7 @@
 package org.example.bloggingapp.Services;
 
 import org.example.bloggingapp.Database.DbInterfaces.IValidationService;
-import org.example.bloggingapp.Database.Utils.RegexPatterns;
+import org.example.bloggingapp.Utils.RegexPatterns;
 
 import java.util.HashMap;
 import java.util.Map;

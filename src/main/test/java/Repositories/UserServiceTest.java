@@ -1,9 +1,9 @@
-package org.example.bloggingapp.Database.Repositories;
+package Repositories;
 
 import org.example.bloggingapp.Services.UserService;
 import org.example.bloggingapp.Models.UserEntity;
-import org.example.bloggingapp.Exceptions.DatabaseException;
-import org.example.bloggingapp.Exceptions.ValidationException;
+import org.example.bloggingapp.Utils.Exceptions.DatabaseException;
+import org.example.bloggingapp.Utils.Exceptions.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;

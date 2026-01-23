@@ -1,9 +1,9 @@
 package org.example.bloggingapp.Database.DbInterfaces;
 
-import org.example.bloggingapp.Exceptions.DatabaseException;
-import org.example.bloggingapp.Exceptions.EntityNotFoundException;
-import org.example.bloggingapp.Exceptions.ServiceException;
-import org.example.bloggingapp.Exceptions.ValidationException;
+import org.example.bloggingapp.Utils.Exceptions.DatabaseException;
+import org.example.bloggingapp.Utils.Exceptions.EntityNotFoundException;
+import org.example.bloggingapp.Utils.Exceptions.ServiceException;
+import org.example.bloggingapp.Utils.Exceptions.ValidationException;
 
 import java.util.List;
 

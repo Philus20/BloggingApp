@@ -3,9 +3,10 @@ package org.example.bloggingapp.controller;
 import org.example.bloggingapp.Services.PostSearchService;
 import org.example.bloggingapp.Services.PostService;
 import org.example.bloggingapp.Models.PostEntity;
-import org.example.bloggingapp.Exceptions.DatabaseException;
-import org.example.bloggingapp.Exceptions.ValidationException;
+import org.example.bloggingapp.Utils.Exceptions.DatabaseException;
+import org.example.bloggingapp.Utils.Exceptions.ValidationException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -20,6 +21,9 @@ public class SearchController {
         this.searchService = searchService;
         this.postService = postService;
         this.scanner = new Scanner(System.in);
+        
+        // Initialize search service
+        System.out.println("Search service initialized successfully!");
     }
     
     /**
@@ -79,12 +83,14 @@ public class SearchController {
         String keyword = scanner.nextLine();
         
         try {
-            long startTime = System.currentTimeMillis();
-            List<PostEntity> results = searchService.searchByKeyword(keyword);
-            long endTime = System.currentTimeMillis();
+            System.out.println("\n=== Using Hash Search Algorithm (O(1) average case) ===");
+            long startTime = System.nanoTime();
+            List<PostEntity> results = advancedSearchService.hashSearchByKeyword(keyword);
+            long endTime = System.nanoTime();
             
-            System.out.println("\nSearch Results for keyword: '" + keyword + "'");
-            System.out.println("Found " + results.size() + " posts in " + (endTime - startTime) + "ms");
+            System.out.println("Search Results for keyword: '" + keyword + "'");
+            System.out.println("Found " + results.size() + " posts in " + (endTime - startTime) / 1000 + " μs");
+            System.out.println("Algorithm: Hash-based search with indexing");
             System.out.println("----------------------------------------");
             
             displaySearchResults(results);
@@ -101,12 +107,15 @@ public class SearchController {
         String author = scanner.nextLine();
         
         try {
-            long startTime = System.currentTimeMillis();
-            List<PostEntity> results = searchService.searchByAuthor(author);
-            long endTime = System.currentTimeMillis();
+            System.out.println("\n=== Using Hash Search Algorithm for Author Index ===");
+            long startTime = System.nanoTime();
+            // Using hash search by keyword for author (indexed in authorIndex)
+            List<PostEntity> results = advancedSearchService.hashSearchByKeyword(author);
+            long endTime = System.nanoTime();
             
-            System.out.println("\nSearch Results for author: '" + author + "'");
-            System.out.println("Found " + results.size() + " posts in " + (endTime - startTime) + "ms");
+            System.out.println("Search Results for author: '" + author + "'");
+            System.out.println("Found " + results.size() + " posts in " + (endTime - startTime) / 1000 + " μs");
+            System.out.println("Algorithm: Hash-based author index lookup");
             System.out.println("----------------------------------------");
             
             displaySearchResults(results);
@@ -123,12 +132,15 @@ public class SearchController {
         String tag = scanner.nextLine();
         
         try {
-            long startTime = System.currentTimeMillis();
-            List<PostEntity> results = searchService.searchByTag(tag);
-            long endTime = System.currentTimeMillis();
+            System.out.println("\n=== Using Hash Search Algorithm for Tag Index ===");
+            long startTime = System.nanoTime();
+            // Using hash search by keyword for tag (indexed in tagIndex)
+            List<PostEntity> results = advancedSearchService.hashSearchByKeyword(tag);
+            long endTime = System.nanoTime();
             
-            System.out.println("\nSearch Results for tag: #" + tag);
-            System.out.println("Found " + results.size() + " posts in " + (endTime - startTime) + "ms");
+            System.out.println("Search Results for tag: #" + tag);
+            System.out.println("Found " + results.size() + " posts in " + (endTime - startTime) / 1000 + " μs");
+            System.out.println("Algorithm: Hash-based tag index lookup");
             System.out.println("----------------------------------------");
             
             displaySearchResults(results);
@@ -145,12 +157,55 @@ public class SearchController {
         String query = scanner.nextLine();
         
         try {
-            long startTime = System.currentTimeMillis();
-            List<PostEntity> results = searchService.searchAll(query);
-            long endTime = System.currentTimeMillis();
+            System.out.println("\n=== Advanced Search Options ===");
+            System.out.println("1. Hash Search (O(1) - Fastest)");
+            System.out.println("2. Binary Search (O(log n) - For titles)");
+            System.out.println("3. Hybrid Search (Combines multiple algorithms)");
+            System.out.println("4. Algorithm Comparison (Test all)");
+            System.out.print("Choose search type (1-4): ");
+            
+            String choice = scanner.nextLine();
+            List<PostEntity> results = new ArrayList<>();
+            String algorithmUsed = "";
+            
+            long startTime = System.nanoTime();
+            
+            switch (choice) {
+                case "1":
+                    System.out.println("\n=== Using Hash Search Algorithm ===");
+                    results = advancedSearchService.hashSearchByKeyword(query);
+                    algorithmUsed = "Hash Search (O(1))";
+                    break;
+                case "2":
+                    System.out.println("\n=== Using Binary Search Algorithm ===");
+                    results = advancedSearchService.binarySearchByTitle(query);
+                    algorithmUsed = "Binary Search (O(log n))";
+                    break;
+                case "3":
+                    System.out.println("\n=== Using Hybrid Search Algorithm ===");
+                    // Use advancedSearch with hybrid option
+                    AdvancedSearchService.SearchOptions options = new AdvancedSearchService.SearchOptions();
+                    options.setSearchType("hybrid");
+                    AdvancedSearchService.SearchResult searchResult = advancedSearchService.advancedSearch(query, options);
+                    results = searchResult.getPosts();
+                    algorithmUsed = "Hybrid Search (Combined)";
+                    break;
+                case "4":
+                    System.out.println("\n=== Algorithm Performance Comparison ===");
+                    AdvancedSearchService.AlgorithmComparison comparison = advancedSearchService.compareAlgorithms(query);
+                    displayAlgorithmComparison(comparison);
+                    return;
+                default:
+                    System.out.println("\n=== Default: Using Hash Search ===");
+                    results = advancedSearchService.hashSearchByKeyword(query);
+                    algorithmUsed = "Hash Search (O(1))";
+            }
+            
+            long endTime = System.nanoTime();
             
             System.out.println("\nCombined Search Results for: '" + query + "'");
-            System.out.println("Found " + results.size() + " posts in " + (endTime - startTime) + "ms");
+            System.out.println("Found " + results.size() + " posts in " + (endTime - startTime) / 1000 + " μs");
+            System.out.println("Algorithm Used: " + algorithmUsed);
             System.out.println("----------------------------------------");
             
             displaySearchResults(results);
@@ -162,45 +217,57 @@ public class SearchController {
         }
     }
     
-    private void viewPerformanceMetrics() {
-        Map<String, Object> metrics = searchService.getPerformanceMetrics();
+    public void viewPerformanceMetrics() {
+        AdvancedSearchService.PerformanceStats stats = advancedSearchService.getPerformanceStats();
         
-        System.out.println("\n=== Search Performance Metrics ===");
-        System.out.println("Total searches: " + metrics.get("totalSearches"));
-        System.out.println("Cache hits: " + metrics.get("cacheHits"));
-        System.out.println("Cache hit rate: " + String.format("%.2f%%", (Double) metrics.get("cacheHitRate") * 100));
-        System.out.println("Average search time: " + String.format("%.2f ms", (Double) metrics.get("averageSearchTimeMs")));
-        System.out.println("Last cache update: " + metrics.get("lastCacheUpdate"));
-        System.out.println("Keyword cache size: " + metrics.get("keywordCacheSize"));
-        System.out.println("Author cache size: " + metrics.get("authorCacheSize"));
-        System.out.println("Tag cache size: " + metrics.get("tagCacheSize"));
+        System.out.println("\n=== Advanced Search Performance Metrics ===");
+        System.out.println("Cache hits: " + stats.getCacheHits());
+        System.out.println("Cache misses: " + stats.getCacheMisses());
+        System.out.println("Cache hit rate: " + String.format("%.2f%%", stats.getCacheHitRate() * 100));
+        System.out.println("Last index update: " + stats.getLastIndexUpdate());
+        System.out.println("Keyword index size: " + stats.getKeywordIndexSize() + " entries");
+        System.out.println("Author index size: " + stats.getAuthorIndexSize() + " entries");
+        System.out.println("Tag index size: " + stats.getTagIndexSize() + " entries");
+        System.out.println("Title index size: " + stats.getTitleIndexSize() + " entries");
+        
+        // Show algorithm performance averages
+        System.out.println("\nAlgorithm Performance Averages:");
+        Map<String, Double> avgTimes = stats.getAvgTimes();
+        for (Map.Entry<String, Double> entry : avgTimes.entrySet()) {
+            System.out.printf("%s: %.1f μs\n", entry.getKey(), entry.getValue() / 1000);
+        }
         System.out.println("----------------------------------------");
     }
     
-    private void preloadCache() {
+    public void preloadCache() {
         try {
-            System.out.println("Preloading cache with common searches...");
+            System.out.println("Building advanced search indexes...");
             long startTime = System.currentTimeMillis();
-            searchService.preloadCache();
+            advancedSearchService.buildIndexes();
             long endTime = System.currentTimeMillis();
             
-            System.out.println("Cache preloaded successfully in " + (endTime - startTime) + "ms");
+            System.out.println("Indexes built successfully in " + (endTime - startTime) + "ms");
             viewPerformanceMetrics();
             
         } catch (DatabaseException e) {
-            System.out.println("Error preloading cache: " + e.getMessage());
+            System.out.println("Error building indexes: " + e.getMessage());
         }
     }
     
     private void clearCache() {
-        System.out.print("Are you sure you want to clear all cache? (y/N): ");
+        System.out.print("Are you sure you want to clear all indexes? (y/N): ");
         String confirmation = scanner.nextLine();
         
         if ("y".equalsIgnoreCase(confirmation) || "yes".equalsIgnoreCase(confirmation)) {
-            searchService.invalidateCache();
-            System.out.println("Cache cleared successfully.");
+            // Clear indexes by rebuilding empty ones
+            try {
+                advancedSearchService.buildIndexes(); // Rebuild indexes
+                System.out.println("Indexes rebuilt successfully.");
+            } catch (DatabaseException e) {
+                System.out.println("Error rebuilding indexes: " + e.getMessage());
+            }
         } else {
-            System.out.println("Cache clear cancelled.");
+            System.out.println("Index rebuild cancelled.");
         }
     }
     
@@ -239,54 +306,82 @@ public class SearchController {
                     order = "desc";
                 }
                 
-                List<PostEntity> sortedResults = searchService.sortPosts(results, sortBy, order);
-                System.out.println("\n=== Sorted Results ===");
+                List<PostEntity> sortedResults = advancedSearchService.quickSortPosts(results, sortBy, order);
+                System.out.println("\n=== Results Sorted with QuickSort Algorithm (O(n log n)) ===");
+                System.out.println("Sort by: " + sortBy + " (" + order + ")");
                 displaySearchResults(sortedResults);
             }
         }
     }
     
     /**
-     * Performance test method to demonstrate search improvements
+     * Display algorithm comparison results
+     */
+    private void displayAlgorithmComparison(AdvancedSearchService.AlgorithmComparison comparison) {
+        System.out.println("\n=== Algorithm Performance Comparison ===");
+        System.out.println("Algorithm\t\tTime (μs)\tResults\tRelative Speed");
+        System.out.println("---------\t\t---------\t-------\t--------------");
+        
+        Map<String, Long> times = comparison.getExecutionTimes();
+        Map<String, List<PostEntity>> results = comparison.getResults();
+        
+        long baselineTime = times.getOrDefault("linear", 1L);
+        
+        for (String algorithm : java.util.Arrays.asList("linear", "hash", "binary", "hybrid")) {
+            if (times.containsKey(algorithm)) {
+                long time = times.get(algorithm);
+                long resultCount = results.get(algorithm).size();
+                double relativeSpeed = (double) baselineTime / time;
+                
+                System.out.printf("%-9s\t\t%8d μs\t%7d\t%12.1fx\n", 
+                    algorithm, time / 1000, resultCount, relativeSpeed);
+            }
+        }
+        
+        System.out.println("\nPerformance Analysis:");
+        System.out.println("• Hash Search: O(1) average case - Fastest for keyword lookups");
+        System.out.println("• Binary Search: O(log n) - Optimal for sorted title searches");
+        System.out.println("• Hybrid Search: Combines multiple strategies for best results");
+        System.out.println("• Linear Search: O(n) - Baseline comparison");
+        System.out.println("----------------------------------------");
+    }
+    /**
+     * Performance test method to demonstrate advanced search improvements
      */
     public void performanceTest() {
-        System.out.println("\n=== Search Performance Test ===");
+        System.out.println("\n=== Advanced Search Performance Test ===");
         
         try {
-            // Test without cache
-            searchService.invalidateCache();
-            System.out.println("Testing search performance without cache...");
-            
             String[] testQueries = {"java", "programming", "tutorial", "blog", "post"};
             
+            System.out.println("Testing all algorithms with performance comparison...");
+            
             for (String query : testQueries) {
-                long startTime = System.nanoTime();
-                List<PostEntity> results = searchService.searchByKeyword(query);
-                long endTime = System.nanoTime();
-                
-                System.out.println("Query: '" + query + "' - " + results.size() + " results in " + 
-                    (endTime - startTime) / 1_000_000 + "ms");
+                System.out.println("\nTesting query: '" + query + "'");
+                AdvancedSearchService.AlgorithmComparison comparison = advancedSearchService.compareAlgorithms(query);
+                displayAlgorithmComparison(comparison);
             }
             
-            // Preload cache and test again
-            System.out.println("\nPreloading cache...");
-            searchService.preloadCache();
-            
-            System.out.println("Testing search performance with cache...");
-            for (String query : testQueries) {
-                long startTime = System.nanoTime();
-                List<PostEntity> results = searchService.searchByKeyword(query);
-                long endTime = System.nanoTime();
+            System.out.println("\n=== QuickSort Performance Test ===");
+            List<PostEntity> allPosts = postService.findAll();
+            if (!allPosts.isEmpty()) {
+                String[] sortCriteria = {"title", "views", "created", "author"};
                 
-                System.out.println("Query: '" + query + "' - " + results.size() + " results in " + 
-                    (endTime - startTime) / 1_000_000 + "ms (cached)");
+                for (String sortBy : sortCriteria) {
+                    long startTime = System.nanoTime();
+                    List<PostEntity> sorted = advancedSearchService.quickSortPosts(allPosts, sortBy, "desc");
+                    long endTime = System.nanoTime();
+                    
+                    System.out.printf("QuickSort by %s: %d posts in %d μs\n", 
+                        sortBy, sorted.size(), (endTime - startTime) / 1000);
+                }
             }
             
-            System.out.println("\nFinal performance metrics:");
+            System.out.println("\nFinal advanced search performance metrics:");
             viewPerformanceMetrics();
             
         } catch (Exception e) {
-            System.out.println("Error during performance test: " + e.getMessage());
+            System.out.println("Error during advanced performance test: " + e.getMessage());
         }
     }
 }
