@@ -57,7 +57,7 @@
           <description value="" />
           <database-type value="POSTGRES" />
           <config-type value="BASIC" />
-          <database-version value="9999.0" />
+          <database-version value="18.1" />
           <driver-source value="BUNDLED" />
           <driver-library value="" />
           <driver value="" />
@@ -81,7 +81,7 @@
           <azure-token-tenant-id value="" />
           <azure-token-client-id value="" />
           <azure-token-client-certificate-file value="" />
-          <session-user value="" />
+          <session-user value="postgres" />
         </database>
         <properties>
           <auto-commit value="false" />
@@ -605,5 +605,9 @@
         </visibility-settings>
       </environment>
     </general-settings>
+  </component>
+  <component name="DBNavigator.Project.StatementExecutionManager">
+    <execution-variables />
+    <execution-variable-types />
   </component>
 </project>

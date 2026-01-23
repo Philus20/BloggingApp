@@ -3,7 +3,7 @@ package org.example.bloggingapp.Database.Repositories;
 import org.example.bloggingapp.Database.DbInterfaces.ICrudQueries;
 import org.example.bloggingapp.Database.DbInterfaces.IConnection;
 import org.example.bloggingapp.Database.DbInterfaces.Repository;
-import org.example.bloggingapp.Database.Services.CrudQueries;
+import org.example.bloggingapp.Services.CrudQueries;
 import org.example.bloggingapp.Database.factories.ConnectionFactory;
 import org.example.bloggingapp.Models.PostEntity;
 
@@ -23,7 +23,7 @@ public class PostRepository implements Repository<PostEntity> {
 
     @Override
     public void create(PostEntity post) {
-        String sql = crudQueries.createQuery("Post", "title, content, createdAt, userId");
+        String sql = crudQueries.createQuery("posts", "title, content, created_at, user_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -49,7 +49,7 @@ public class PostRepository implements Repository<PostEntity> {
 
     @Override
     public PostEntity findByInteger(int id) {
-        String sql = crudQueries.getByIntegerQuery(id, "Post", "postId");
+        String sql = crudQueries.getByIntegerQuery(id, "posts", "post_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -66,7 +66,7 @@ public class PostRepository implements Repository<PostEntity> {
 
     @Override
     public PostEntity findByString(String identifier) {
-        String sql = crudQueries.getStringQuery(identifier, "Post", "title");
+        String sql = crudQueries.getStringQuery(identifier, "posts", "title");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -83,7 +83,7 @@ public class PostRepository implements Repository<PostEntity> {
 
     @Override
     public List<PostEntity> findAll() {
-        String sql = crudQueries.getAllQuery("Post");
+        String sql = crudQueries.getAllQuery("posts");
         List<PostEntity> posts = new ArrayList<>();
         
         try (Connection connection = connectionFactory.createConnection();
@@ -101,7 +101,7 @@ public class PostRepository implements Repository<PostEntity> {
 
     @Override
     public void updateById(int id) {
-        String sql = crudQueries.updateByIdQuery(id, "Post", "title = ?, content = ?, userId = ?", "postId");
+        String sql = crudQueries.updateByIdQuery(id, "posts", "title = ?, content = ?, user_id = ?, status = ?, views = ?, author_name = ?", "post_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -109,6 +109,27 @@ public class PostRepository implements Repository<PostEntity> {
             statement.setString(1, "updated_title");
             statement.setString(2, "updated_content");
             statement.setInt(3, 1);
+            statement.setString(4, "Published");
+            statement.setInt(5, 0);
+            statement.setString(6, "Test Author");
+            
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to update post", e);
+        }
+    }
+    
+    // New method to update with PostEntity data (using only existing schema columns)
+    public void updatePost(int id, PostEntity post) {
+        String sql = "UPDATE posts SET title = ?, content = ?, user_id = ? WHERE post_id = ?";
+        
+        try (Connection connection = connectionFactory.createConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            
+            statement.setString(1, post.getTitle());
+            statement.setString(2, post.getContent());
+            statement.setInt(3, post.getUserId());
+            statement.setInt(4, id);
             
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -118,7 +139,7 @@ public class PostRepository implements Repository<PostEntity> {
 
     @Override
     public void delete(int id) {
-        String sql = crudQueries.deleteByIdQuery(id, "Post", "postId");
+        String sql = crudQueries.deleteByIdQuery(id, "posts", "post_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -131,11 +152,11 @@ public class PostRepository implements Repository<PostEntity> {
 
     private PostEntity mapResultSetToPost(ResultSet resultSet) throws SQLException {
         PostEntity post = new PostEntity();
-        post.setPostId(resultSet.getInt("postId"));
+        post.setPostId(resultSet.getInt("post_id"));
         post.setTitle(resultSet.getString("title"));
         post.setContent(resultSet.getString("content"));
-        post.setCreatedAt(resultSet.getTimestamp("createdAt").toLocalDateTime());
-        post.setUserId(resultSet.getInt("userId"));
+        post.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
+        post.setUserId(resultSet.getInt("user_id"));
         return post;
     }
 }

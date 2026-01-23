@@ -3,7 +3,7 @@ package org.example.bloggingapp.Database.Repositories;
 import org.example.bloggingapp.Database.DbInterfaces.ICrudQueries;
 import org.example.bloggingapp.Database.DbInterfaces.IConnection;
 import org.example.bloggingapp.Database.DbInterfaces.Repository;
-import org.example.bloggingapp.Database.Services.CrudQueries;
+import org.example.bloggingapp.Services.CrudQueries;
 import org.example.bloggingapp.Database.factories.ConnectionFactory;
 import org.example.bloggingapp.Models.TagEntity;
 
@@ -23,7 +23,7 @@ public class TagRepository implements Repository<TagEntity> {
 
     @Override
     public void create(TagEntity tag) {
-        String sql = crudQueries.createQuery("Tag", "name");
+        String sql = crudQueries.createQuery("tags", "name");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -46,7 +46,7 @@ public class TagRepository implements Repository<TagEntity> {
 
     @Override
     public TagEntity findByInteger(int id) {
-        String sql = crudQueries.getByIntegerQuery(id, "Tag", "tagId");
+        String sql = crudQueries.getByIntegerQuery(id, "tags", "tag_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -63,7 +63,7 @@ public class TagRepository implements Repository<TagEntity> {
 
     @Override
     public TagEntity findByString(String identifier) {
-        String sql = crudQueries.getStringQuery(identifier, "Tag", "name");
+        String sql = crudQueries.getStringQuery(identifier, "tags", "name");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -80,7 +80,7 @@ public class TagRepository implements Repository<TagEntity> {
 
     @Override
     public List<TagEntity> findAll() {
-        String sql = crudQueries.getAllQuery("Tag");
+        String sql = crudQueries.getAllQuery("tags");
         List<TagEntity> tags = new ArrayList<>();
         
         try (Connection connection = connectionFactory.createConnection();
@@ -98,7 +98,7 @@ public class TagRepository implements Repository<TagEntity> {
 
     @Override
     public void updateById(int id) {
-        String sql = crudQueries.updateByIdQuery(id, "Tag", "name = ?", "tagId");
+        String sql = crudQueries.updateByIdQuery(id, "tags", "name = ?", "tag_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -113,7 +113,7 @@ public class TagRepository implements Repository<TagEntity> {
 
     @Override
     public void delete(int id) {
-        String sql = crudQueries.deleteByIdQuery(id, "Tag", "tagId");
+        String sql = crudQueries.deleteByIdQuery(id, "tags", "tag_id");
         
         try (Connection connection = connectionFactory.createConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -126,7 +126,7 @@ public class TagRepository implements Repository<TagEntity> {
 
     private TagEntity mapResultSetToTag(ResultSet resultSet) throws SQLException {
         TagEntity tag = new TagEntity();
-        tag.setTagId(resultSet.getInt("tagId"));
+        tag.setTagId(resultSet.getInt("tag_id"));
         tag.setName(resultSet.getString("name"));
         return tag;
     }

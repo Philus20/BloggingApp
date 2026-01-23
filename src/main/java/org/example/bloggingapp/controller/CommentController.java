@@ -16,6 +16,10 @@ import javafx.stage.StageStyle;
 
 import org.example.bloggingapp.Models.PostEntity;
 import org.example.bloggingapp.Models.CommentEntity;
+import org.example.bloggingapp.Database.factories.ServiceFactory;
+import org.example.bloggingapp.Services.CommentService;
+import org.example.bloggingapp.Services.UserService;
+import org.example.bloggingapp.Utils.RegexPatterns;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -58,11 +62,18 @@ public class CommentController {
     @FXML private Label charCountLabel;
     @FXML private Button submitButton;
     
+    // ==================== SERVICE LAYER ===================
+    
+    private ServiceFactory serviceFactory;
+    private CommentService commentService;
+    private UserService userService;
+    
     // ==================== DATA LAYER ===================
     
     private PostEntity currentPost;
     private Stage commentStage;
     private boolean isVisible = false;
+    private int currentUserId = 1; // This would come from user session
     private Map<Integer, List<CommentEntity>> postComments = new HashMap<>();
     
     // ==================== INITIALIZATION ===================
@@ -71,19 +82,28 @@ public class CommentController {
     public void initialize() {
         System.out.println("🚀 Initializing CommentController");
         
-        // Setup event handlers
-        setupEventHandlers();
-        
-        // Initialize with empty state
-        clearComments();
-        
-        System.out.println("✅ CommentController initialized successfully");
+        try {
+            // Initialize services using ServiceFactory
+            this.serviceFactory = ServiceFactory.getInstance();
+            this.commentService = serviceFactory.getCommentService();
+            this.userService = serviceFactory.getUserService();
+            
+            // Setup event handlers
+            setupEventHandlers();
+            
+            // Initialize with empty state
+            clearComments();
+            
+            System.out.println("✅ CommentController initialized successfully");
+        } catch (Exception e) {
+            System.err.println("❌ Failed to initialize CommentController: " + e.getMessage());
+        }
     }
     
     private void setupEventHandlers() {
         // Character counter for comment field
         commentField.textProperty().addListener((obs, oldVal, newVal) -> {
-            int length = newVal.length();
+            int length = newVal != null ? newVal.length() : 0;
             charCountLabel.setText(length + "/500");
             
             // Change color if approaching limit
@@ -115,7 +135,7 @@ public class CommentController {
             
             if (commentStage == null) {
                 // Load the comment scene
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/bloggingapp/fxml/comment_scene.fxml"));
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/example/bloggingapp/Screens/fxml/comment_scene.fxml"));
                 loader.setController(this);
                 Parent root = loader.load();
                 
@@ -203,19 +223,29 @@ public class CommentController {
     private void loadComments(int postId) {
         commentsContainer.getChildren().clear();
         
-        // Get comments for this post (or create empty list)
-        List<CommentEntity> comments = postComments.getOrDefault(postId, new ArrayList<>());
-        
-        if (comments.isEmpty()) {
-            // Show no comments message
-            Label noCommentsLabel = new Label("No comments yet. Be the first to comment!");
-            noCommentsLabel.setStyle("-fx-text-fill: #6c757d; -fx-font-style: italic; -fx-padding: 20;");
-            commentsContainer.getChildren().add(noCommentsLabel);
-        } else {
-            // Load each comment
-            for (CommentEntity comment : comments) {
-                addCommentToUI(comment);
+        try {
+            // Load comments from database using service layer
+            List<CommentEntity> comments = commentService.findByPostId(postId);
+            
+            // Store in local cache
+            postComments.put(postId, comments);
+            
+            if (comments.isEmpty()) {
+                // Show no comments message
+                Label noCommentsLabel = new Label("No comments yet. Be the first to comment!");
+                noCommentsLabel.setStyle("-fx-text-fill: #6c757d; -fx-font-style: italic; -fx-padding: 20;");
+                commentsContainer.getChildren().add(noCommentsLabel);
+            } else {
+                // Load each comment
+                for (CommentEntity comment : comments) {
+                    addCommentToUI(comment);
+                }
             }
+        } catch (Exception e) {
+            System.err.println("❌ Error loading comments for post " + postId + ": " + e.getMessage());
+            Label errorLabel = new Label("Error loading comments");
+            errorLabel.setStyle("-fx-text-fill: #dc3545; -fx-font-style: italic; -fx-padding: 20;");
+            commentsContainer.getChildren().add(errorLabel);
         }
     }
     
@@ -265,30 +295,34 @@ public class CommentController {
     private void submitComment(ActionEvent event) {
         String content = commentField.getText().trim();
         
-        if (content.isEmpty()) {
+        // Content validation using RegexPatterns
+        if (RegexPatterns.isNullOrEmpty(content)) {
             showAlert(Alert.AlertType.WARNING, "Empty Comment", "Please write a comment before submitting.");
             return;
         }
         
-        if (content.length() > 500) {
-            showAlert(Alert.AlertType.WARNING, "Comment Too Long", "Comment must be 500 characters or less.");
+        if (!RegexPatterns.isLengthValid(content, 1, 500)) {
+            showAlert(Alert.AlertType.WARNING, "Comment Too Long", "Comment must be between 1 and 500 characters.");
             return;
         }
         
         try {
-            // Create new comment
+            // Create new comment entity
             CommentEntity comment = new CommentEntity();
             comment.setPostId(currentPost.getPostId());
-            comment.setUserId(1); // This would come from user session
+            comment.setUserId(currentUserId);
             comment.setContent(content);
             comment.setCreatedAt(LocalDateTime.now());
             
-            // Add to data structure
+            // Save comment to database using service layer
+            CommentEntity createdComment = commentService.create(comment);
+            
+            // Add to local data structure
             List<CommentEntity> comments = postComments.computeIfAbsent(currentPost.getPostId(), k -> new ArrayList<>());
-            comments.add(comment);
+            comments.add(createdComment);
             
             // Add to UI
-            addCommentToUI(comment);
+            addCommentToUI(createdComment);
             
             // Clear comment field
             commentField.clear();
@@ -296,11 +330,11 @@ public class CommentController {
             // Scroll to bottom
             commentsScrollPane.setVvalue(1.0);
             
-            System.out.println("✅ Comment added successfully for post: " + currentPost.getPostId());
+            System.out.println("✅ Comment added to database with ID: " + createdComment.getCommentId());
             
         } catch (Exception e) {
             System.err.println("❌ Error submitting comment: " + e.getMessage());
-            showAlert(Alert.AlertType.ERROR, "Error", "Failed to submit comment. Please try again.");
+            showAlert(Alert.AlertType.ERROR, "Database Error", "Failed to submit comment. Please try again.");
         }
     }
     

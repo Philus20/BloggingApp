@@ -11,11 +11,11 @@ public class ConnectionFactory implements IConnection {
 
     public Connection createConnection() {
         try {
-            String userName = "postgres";
+            String url = "jdbc:postgresql://localhost:5432/blogging_db";
+            String username = "postgres";
             String password = "postgres";
-            String url = "jdbc:postgresql://localhost:5432/BloggingDb";
             Connection connection =
-                    DriverManager.getConnection(url, userName, password);
+                    DriverManager.getConnection(url, username, password);
 
             System.out.println("Connected to the database successfully.");
             return connection;
