@@ -1,5 +1,6 @@
 package org.example.bloggingapp.controller;
 
+import org.example.bloggingapp.Services.AdvancedSearchService;
 import org.example.bloggingapp.Services.PostSearchService;
 import org.example.bloggingapp.Services.PostService;
 import org.example.bloggingapp.Models.PostEntity;
@@ -16,12 +17,13 @@ public class SearchController {
     private final PostSearchService searchService;
     private final PostService postService;
     private final Scanner scanner;
-    
-    public SearchController(PostSearchService searchService, PostService postService) {
+    private final AdvancedSearchService advancedSearchService ;
+    public SearchController(PostSearchService searchService, PostService postService, AdvancedSearchService advancedSearchService) {
         this.searchService = searchService;
         this.postService = postService;
         this.scanner = new Scanner(System.in);
-        
+
+        this.advancedSearchService = advancedSearchService;
         // Initialize search service
         System.out.println("Search service initialized successfully!");
     }

@@ -1,5 +1,6 @@
 package org.example.bloggingapp;
 
+import org.example.bloggingapp.Services.PostSearchService;
 import org.example.bloggingapp.controller.SearchController;
 import org.example.bloggingapp.Services.AdvancedSearchService;
 import org.example.bloggingapp.Services.PostService;
@@ -51,9 +52,10 @@ public class AdvancedSearchMainApplication {
         PostRepository postRepository = new PostRepository();
         PostService postService = new PostService(postRepository);
         AdvancedSearchService advancedSearchService = new AdvancedSearchService(postService);
+        PostSearchService postSearchService = new PostSearchService(postService);
         
         // Create search controller with advanced algorithms
-        searchController = new SearchController(advancedSearchService, postService);
+        searchController = new SearchController(postSearchService, postService,advancedSearchService);
         
         System.out.println("✓ Advanced Search Service initialized with algorithms");
         System.out.println("✓ Indexes built for: Keywords, Authors, Tags, Titles, IDs");
